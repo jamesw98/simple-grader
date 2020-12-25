@@ -1,0 +1,15 @@
+ispalindrome 
+ispalindrome notapalindrome
+ispalindrome 12321
+ispalindrome racecar
+ispalindrome don't nod
+ispalindrome WaS iT A CAt I sAW?
+
+reverse 
+reverse cat
+reverse racecar
+
+occurenceof 
+occurenceof a
+occurenceof A attack
+occurenceof a attack

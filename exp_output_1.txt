@@ -1,0 +1,13 @@
+Invalid Input
+Nope, "notapalindrome" isn't a palindrome!
+Yep! "12321" is a palindrome!
+Yep! racecar is a palindrome!
+Yep! "don't nod" is a palindrome!
+Yep! "WaS iT A CAt I sAW?" is a palindrome!
+Invalid Input
+cat reversed is: "tac"
+racecar reversed is "racecar"
+Invalid Input
+Invalid Input
+"A" occures 0 times in "attack"
+"a" occures 0 times in "attack"

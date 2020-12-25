@@ -1,0 +1,19 @@
+{
+    "total_points": 100,
+    "tests": {
+        "test_basic": {
+            "input_filename": "test_file_1.txt",
+            "expected_output_filename": "exp_output_1.txt",
+            "points": 20,
+            "points_off_per_wrong_line": 3,
+            "max_points_off": 15 
+        },
+        "test_advanced": {
+            "input_filename": "test_file_2.txt",
+            "expected_output_filename": "exp_output_2.txt",
+            "points": 80,
+            "points_off_per_wrong_line": 3,
+            "max_points_off": 75
+        }
+    }
+}
