@@ -16,7 +16,10 @@ def print_test_info():
         print("   Input File: " + test.input_file)
         count += 1
 
+# loads the grading data from a json file
+# returns None on failure, a list of tests on success 
 def load_grading_data(filename) -> bool:
+    all_tests.clear()
     if (".json" not in filename):
         print("Error: invalid file type")
         return False
@@ -24,12 +27,15 @@ def load_grading_data(filename) -> bool:
     try:
         with open(filename) as f:
             data = json.load(f)
+            validate_json(data)
+            return all_tests
     except:
         print("Error: could not load file: '" + filename + "'")
+        return None
 
-    return validate_json(data)
     
 # ensures the json is valid and adds the tests to the list of all tests
+# returns true if everything is valid, false is something is wrong
 def validate_json(data) -> bool:
     if ("total_points" not in data):
         print("Error: Missing 'total_points'")
@@ -60,6 +66,7 @@ def validate_json(data) -> bool:
         
         if ("points" not in curr_test):
             print("Error: Test: '" + test + "' does not have a point value")
+            return False
 
         points = curr_test["points"]
         

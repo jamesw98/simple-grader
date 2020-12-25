@@ -1,0 +1,10 @@
+{
+    "total_points": 100,
+    "tests": {
+        "test_basic": {
+            "input_filename": "test_file_1.txt",
+            "expected_output_filename": "exp_output_1.txt",
+            "points": 20
+        }
+    }
+}
