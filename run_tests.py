@@ -5,7 +5,7 @@ from read_json import print_test_info
 
 import subprocess as sp
 
-def grade(grading_json_filename, exe_name) -> bool:
+def grade(grading_json_filename, exe_name):
     if (load_grading_data(grading_json_filename) == []):
         return False
 
@@ -43,6 +43,9 @@ def run_test(test, exe_name):
         if (not check_line(student_output[i], expected_output[i])):
             student_score = check_score(student_score, points_off, points, max_points)
             print_error(i, expected_output[i], student_output[i])
+
+    if (student_score < points - max_points):
+        student_score = points - max_points
 
     if (student_score == points):
         print("\nNo errors! Congratulations!")
