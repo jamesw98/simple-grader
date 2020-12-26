@@ -1,0 +1,32 @@
+Tests to be run:
+0. test_basic
+   Points: 110
+   Input File: test_file_1.txt
+
+Running test: test_basic
+
+No errors! Congratulations!
+
+Your score: 110/110
+Your percent: 100.0%
+Tests to be run:
+0. test_basic
+   Points: 110
+   Input File: test_file_1.txt
+
+Running test: test_basic
+
+Error Line #5
+Expected: cat reversed is: "tac"
+Received: cat reversed is: "cat"
+
+Error Line #9
+Expected: "A" occures 0 times in "attack"
+Received: "A" occures 1 times in "attack"
+
+Error Line #10
+Expected: "a" occures 2 times in "attack"
+Received: "a" occures 3 times in "attack"
+
+Your score: 80/110
+Your percent: 72.73%

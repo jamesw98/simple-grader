@@ -5,9 +5,12 @@ from test import Test
 
 all_tests = []
 
+def get_all_tests():
+    return all_tests
+
 # prints out test info
 def print_test_info():
-    print("All tests run for this grader:")
+    print("Tests to be run:")
     
     count = 0
     for test in all_tests:
