@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from read_json import load_grading_data
 from read_json import get_all_tests
 from read_json import print_test_info
@@ -6,29 +5,45 @@ from read_json import print_test_info
 import subprocess as sp
 
 def grade(grading_json_filename, exe_name):
-    if (load_grading_data(grading_json_filename) == []):
-        return False
+    if (load_grading_data(grading_json_filename) == None):      
+        return
+
+    if (".py" not in exe_name and ".hs" not in exe_name):
+        print("Invalid program type, currently only Python and Haskell are supported")
+        return
 
     print_test_info()
 
     for test in get_all_tests():
         run_test(test, exe_name)
 
+# runs tests
 def run_test(test, exe_name):
-    print("\nRunning test: " + test.name)
+    print(f"\nRunning test: {test.name}")
 
+    # renames variables to make it easier to read
     points = test.points
     points_off = test.points_off_per_line
     max_points = test.max_points_off
 
     test_filename = test.input_file
     test_expected = test.expected_output_file
+    
+    # checks for python or haskell
+    if (".py" in exe_name):
+        student_exe = sp.run(["python3", exe_name, test_filename], universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    # compiles and runs the haskell program
+    else:
+        sp.run(["ghc", "-o", "student_exe", exe_name])
+        student_exe = sp.run(["./student_exe"], universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
 
-    student_exe = sp.run(["python3", exe_name, test_filename], universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    # determine if the program is writint to stdout or a file
+    if (test.stdout):
+        student_output = student_exe.stdout.split("\n")
+    else:
+        student_output = open(test.student_output, "r").readlines()
 
-    student_output = student_exe.stdout.split("\n")
-    out = open(test_expected, "r")
-    expected_output = out.readlines()
+    expected_output = open(test_expected, "r").readlines()
 
     student_score = points
 
@@ -36,13 +51,13 @@ def run_test(test, exe_name):
         # checks for missing line at end of file/stdout
         if (i > len(student_output) - 1):
             student_score = check_score(student_score, points_off, points, max_points)
-            print_error(i, expected_output[i], "<empty line>")
+            print_error(i, expected_output[i], "<empty line>", points_off)
             continue
         
         # checks for incorrect line
         if (not check_line(student_output[i], expected_output[i])):
             student_score = check_score(student_score, points_off, points, max_points)
-            print_error(i, expected_output[i], student_output[i])
+            print_error(i, expected_output[i], student_output[i], points_off)
 
     if (student_score < points - max_points):
         student_score = points - max_points
@@ -64,8 +79,9 @@ def calc_percent(student_score, points):
     return 100 * float(student_score) / float(points)
             
 # prints error message
-def print_error(num, expected, received):
+def print_error(num, expected, received, points_off):
     print("\nError Line #" + str(num))
+    print("-" + str(points_off) + " points")
     print("Expected: " + expected.replace("\n", ""))
     print("Received: " + received)
 

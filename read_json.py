@@ -3,6 +3,8 @@ import json
 
 from test import Test
 
+ERROR_START = "Error: Test: '"
+
 all_tests = []
 
 def get_all_tests():
@@ -21,7 +23,7 @@ def print_test_info():
 
 # loads the grading data from a json file
 # returns None on failure, a list of tests on success 
-def load_grading_data(filename) -> bool:
+def load_grading_data(filename):
     all_tests.clear()
     if (".json" not in filename):
         print("Error: invalid file type")
@@ -30,9 +32,10 @@ def load_grading_data(filename) -> bool:
     try:
         with open(filename) as f:
             data = json.load(f)
-            validate_json(data)
+            if not validate_json(data):
+                return None
             return all_tests
-    except:
+    except Exception:
         print("Error: could not load file: '" + filename + "'")
         return None
 
@@ -52,23 +55,30 @@ def validate_json(data) -> bool:
         print("Error: 'tests' included, but is empty")
         return False
     
+    if ("stdout" not in data):
+        print("Warning: Missing 'stdout', defaulting to 'true'")
+    
+    if ("stdout" in data and not data["stdout"] and "student_output" not in data):
+        print("Error: 'student_output' missing while 'stdout' is false is not valid")
+        return False
+
     for test in data["tests"]:
         curr_test = data["tests"][test]
 
         if ("input_filename" not in curr_test):
-            print("Error: Test: '" + test + "' does not have an input file ('input_filename')")
+            print(f"{ERROR_START} {test}' does not have an input file ('input_filename')")
             return False
         
         input_filename = curr_test["input_filename"]
         
         if ("expected_output_filename" not in curr_test):
-            print("Error: Test: '" + test + "' does not have an expected output file ('expected_output_filename')")
+            print(f"{ERROR_START} {test}' does not have an expected output file ('expected_output_filename')")
             return False
 
         expected_output_filename = curr_test["expected_output_filename"]
         
         if ("points" not in curr_test):
-            print("Error: Test: '" + test + "' does not have a point value")
+            print("{ERROR_START} {test}' does not have a point value")
             return False
 
         points = curr_test["points"]
@@ -85,6 +95,6 @@ def validate_json(data) -> bool:
         else:
             max_off = curr_test["max_points_off"]
 
-        all_tests.append(Test(test, points, input_filename, expected_output_filename, points_per_line, max_off))
+        all_tests.append(Test(test, points, input_filename, expected_output_filename, points_per_line, max_off, data["stdout"], data["student_output"]))
     
     return True
