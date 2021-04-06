@@ -43,10 +43,11 @@ def run_test(test, exe_name):
     else:
         student_output = open(test.student_output, "r").readlines()
 
+    # reads the expected output
     expected_output = open(test_expected, "r").readlines()
-
     student_score = points
 
+    # goes through the expected output and compares the student's output
     for i in range(len(expected_output)):
         # checks for missing line at end of file/stdout
         if (i > len(student_output) - 1):
@@ -80,10 +81,10 @@ def calc_percent(student_score, points):
             
 # prints error message
 def print_error(num, expected, received, points_off):
-    print("\nError Line #" + str(num))
-    print("-" + str(points_off) + " points")
-    print("Expected: " + expected.replace("\n", ""))
-    print("Received: " + received)
+    print(f"\nError Line #{str(num)}")
+    print(f"- {str(points_off)} points")
+    print(f"Expected: {expected[:-1]}")
+    print(f"Received: {received[:-1]}")
 
 # compares a student line to an expected line
 def check_line(student_line, expected_line):

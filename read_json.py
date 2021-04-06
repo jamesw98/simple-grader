@@ -35,7 +35,8 @@ def load_grading_data(filename):
             if not validate_json(data):
                 return None
             return all_tests
-    except Exception:
+    except Exception as e:
+        print(e)
         print("Error: could not load file: '" + filename + "'")
         return None
 
@@ -43,6 +44,8 @@ def load_grading_data(filename):
 # ensures the json is valid and adds the tests to the list of all tests
 # returns true if everything is valid, false is something is wrong
 def validate_json(data) -> bool:
+    stdout = True
+
     if ("total_points" not in data):
         print("Error: Missing 'total_points'")
         return False
@@ -57,10 +60,11 @@ def validate_json(data) -> bool:
     
     if ("stdout" not in data):
         print("Warning: Missing 'stdout', defaulting to 'true'")
-    
-    if ("stdout" in data and not data["stdout"] and "student_output" not in data):
-        print("Error: 'student_output' missing while 'stdout' is false is not valid")
-        return False
+    else: 
+        stdout = False
+        if (not data["stdout"] and "student_output" not in data):
+            print("Error: 'student_output' missing while 'stdout' is false is not valid")
+            return False
 
     for test in data["tests"]:
         curr_test = data["tests"][test]
@@ -94,7 +98,12 @@ def validate_json(data) -> bool:
             max_off = points // 2
         else:
             max_off = curr_test["max_points_off"]
+        
+        if (stdout):
+            student_output = ""
+        else:
+            student_output = data["student_output"]
 
-        all_tests.append(Test(test, points, input_filename, expected_output_filename, points_per_line, max_off, data["stdout"], data["student_output"]))
+        all_tests.append(Test(test, points, input_filename, expected_output_filename, points_per_line, max_off, stdout, student_output))
     
     return True
