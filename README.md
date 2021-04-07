@@ -108,7 +108,81 @@ If you want to have more than one test per run, you can construct your json file
     }
 }
 ```
-This json file (`args_test.json`) with the corresponding txt files and the c file that this was made to grade (`args_test.c` and `args_test_wrong.c`) are included in this repo
+This json file (`args_test.json`) with the corresponding txt files and the c file that this was made to grade (`args_test.c` and `args_test_wrong.c`) are included in this repo. The output will look like this: 
+```
+Tests to be run:
+0. test_basic
+   Points: 40
+   Input File: test.txt
+1. test_ryan
+   Points: 90
+   Input File: test_2.txt
+2. test_gman
+   Points: 90
+   Input File: test_3.txt
+
+========== Running test: test_basic ==========
+
+No errors! Congratulations!
+
+Your score: 40/40
+Your percent: 100.0%
+
+========== Running test: test_ryan ==========
+
+No errors! Congratulations!
+
+Your score: 90/90
+Your percent: 100.0%
+
+========== Running test: test_gman ==========
+
+No errors! Congratulations!
+
+Your score: 90/90
+Your percent: 100.0%
+
+========== Results of All Tests ==========
+
+Your score 220/220
+Your percent 100.0%
+```
+### Crashing/Not Compiling Checking
+The grader will also check if the student's program crashes or fails to compile. Here is some output of a version of `args_test.c` that segfaults on tests 1 and 2: 
+```
+Tests to be run:
+0. test_basic
+   Points: 40
+   Input File: test.txt
+1. test_ryan
+   Points: 90
+   Input File: test_2.txt
+2. test_gman
+   Points: 90
+   Input File: test_3.txt
+
+========== Running test: test_basic ==========
+
+No errors! Congratulations!
+
+Your score: 40/40
+Your percent: 100.0%
+
+========== Running test: test_ryan ==========
+
+FATAL: Your program crashed or didn't compile! No points earned!
+Command '['./student_exe', 'test_2.txt']' died with <Signals.SIGSEGV: 11>.
+
+========== Running test: test_gman ==========
+
+FATAL: Your program crashed or didn't compile! No points earned!
+Command '['./student_exe', 'test_3.txt']' died with <Signals.SIGSEGV: 11>.
+
+========== Results of All Tests ==========
+
+Your score 40/220
+Your percent 18.18%
+```
 ### Supported Languages
 * Python
 * C
