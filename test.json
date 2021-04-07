@@ -1,0 +1,15 @@
+{
+    "language": "python",
+    "arguments": true,
+    "stdout": true,
+    "tests": {
+        "test_basic": {
+            "input_filename": "test_file_1.txt",
+            "expected_output_filename": "exp_output_1.txt",
+            "args": ["test_file_1.txt"],
+            "points": 110,
+            "points_off_per_wrong_line": 10,
+            "max_points_off": 100
+        }
+    }
+}
