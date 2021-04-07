@@ -28,7 +28,7 @@ def grade(grading_json_filename, prog_name):
 
 # checks if program has valid extension
 def check_extension(prog_name) -> bool:
-    if (".py" not in prog_name and ".hs" not in prog_name and ".pas" not in prog_name and ".c" not in prog_name):
+    if (".py" not in prog_name and ".hs" not in prog_name and ".c" not in prog_name):
         print("Invalid program type, currently only Python and Haskell are supported")
         return False
 
@@ -44,17 +44,23 @@ def run_test(test, prog_name):
     max_points = test.max_points_off
 
     test_expected = test.expected_output_file
-    
-    # checks for python or haskell
-    if (".py" in prog_name):
-        student_exe = sp.run(["python3", prog_name] + test.arguments, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-    # compiles and runs the haskell program
-    elif (".hs" in prog_name):
-        sp.run(["ghc", "-o", "student_exe", prog_name])
-        student_exe = sp.run(["./student_exe"] + test.arguments, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-    elif (".c" in prog_name):
-        sp.run(["gcc", "-o", "student_exe", prog_name])
-        student_exe = sp.run(["./student_exe"] + test.arguments, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+
+    try:
+        # checks for python or haskell
+        if (".py" in prog_name):
+            student_exe = sp.run(["python3", prog_name] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        # compiles and runs the haskell program
+        elif (".hs" in prog_name):
+            sp.run(["ghc", "-o", "student_exe", prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            student_exe = sp.run(["./student_exe"] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        elif (".c" in prog_name):
+            sp.run(["gcc", "-o", "student_exe", prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            student_exe = sp.run(["./student_exe"] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+
+    # student program crashed, or failed to compile
+    except Exception as e:
+        print(f"\nFATAL: Your program crashed or didn't compile! No points earned!\n{e}")
+        return 0
 
     # determine if the program is writint to stdout or a file
     if (test.stdout):

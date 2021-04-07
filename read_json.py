@@ -11,7 +11,7 @@ all_tests = []
 def get_all_tests():
     return all_tests
 
-# prints out test info
+# prints out test info, returns the max points
 def print_test_info():
     print("Tests to be run:")
 
@@ -26,8 +26,6 @@ def print_test_info():
         total_points += test.points
 
     return total_points
-    
-    
 
 # loads the grading data from a json file
 # returns None on failure, a list of tests on success 
@@ -54,18 +52,23 @@ def load_grading_data(filename):
 def validate_json(data) -> bool:
     stdout = True
 
+    # ensures proper formatting for the base json
+    # tests
     if ("tests" not in data):
         print("Error: 'tests' was not included")
         return False
 
+    # makes sure there actually are tests
     if (len(data["tests"]) == 0):
         print("Error: 'tests' included, but is empty")
         return False
     
+    # makes sure arguments is either true or false
     if ("arguments" not in data):
         print("Error: 'arguments' not included")
         return False
     
+    # checks if stdout is specified
     if ("stdout" not in data):
         print("Warning: Missing 'stdout', defaulting to 'true'")
     else: 
@@ -75,53 +78,62 @@ def validate_json(data) -> bool:
             print("Error: 'student_output' missing while 'stdout' is false is not valid")
             return False
 
+    # checks each test
     for test in data["tests"]:
+        # gets the current test
         curr_test = data["tests"][test]
 
+        # make sure there is an input filename, so it knows what to report so the student can check
         if ("input_filename" not in curr_test):
             print(f"{ERROR_START} {test}' does not have an input file ('input_filename')")
             return False
         
         input_filename = curr_test["input_filename"]
         
+        # makes sure there is an expected output file
         if ("expected_output_filename" not in curr_test):
             print(f"{ERROR_START} {test}' does not have an expected output file ('expected_output_filename')")
             return False
 
         expected_output_filename = curr_test["expected_output_filename"]
         
+        # makes sure each test has a point value
         if ("points" not in curr_test):
             print("{ERROR_START} {test}' does not have a point value")
             return False
 
         points = curr_test["points"]
 
-        if ("arguments" in data):
+        # makes sure there are arguments 
+        if (data["arguments"]):
             if ("args" not in curr_test):
-                print(f"{ERROR_START} {test} does not have arguments")
+                print(f"{ERROR_START} {test}' does not have arguments")
                 return False
 
             args = curr_test["args"]      
         else:
             args = []
         
+        # makes sure there are points off per line specified
         if ("points_off_per_wrong_line" not in curr_test):
-            print("Warning: 'points_off_per_wrong_line' missing, defaulting to '1'")
-            points_per_line = 1
-        else:
-            points_per_line = curr_test["points_off_per_wrong_line"]
+            print(f"{ERROR_START} {test}' does not have 'points_off_per_wrong_line'")
+            return False
 
+        # checks if max points off was specified, if not, defaults to the total points for that test
         if ("max_points_off" not in curr_test):
-            print("Warning: 'max_points_off' missing, defaulting to 'points'/2")
-            max_off = points // 2
+            print("Warning: 'max_points_off' missing, defaulting to 'points'")
+            max_off = points
         else:
             max_off = curr_test["max_points_off"]
         
+        # if the program writes to stdout, student output doesn't matter
         if (stdout):
             student_output = ""
+        # if the program writes to a file, gets the file
         else:
             student_output = data["student_output"]
 
+        # adds the test
         all_tests.append(Test(test, points, input_filename, expected_output_filename, points_per_line, max_off, stdout, student_output, args))
     
     return True

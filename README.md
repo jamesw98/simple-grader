@@ -20,7 +20,12 @@ Start by writing a JSON file with info on grading, here is a simple template (`t
     }
 }
 ```
-This file has the minimum required data if the program you are grading takes input from a file, whose name is passed in `stdin` (currently the only supported means of input). This specific test json was written for the `string_fun_*.py` files, which are in this repo. These files output to `stdout`, so the grader captures that and compares the output to the file `exp_output_1.txt`. Output looks like this, depending on if you run the correct or wrong string fun file:  
+This file has the minimum required data if the program you are grading takes input from a file, whose name is passed in `stdin` (currently the only supported means of input). This specific test json was written for the `string_fun_*.py` files, which are in this repo. These files output to `stdout`, so the grader captures that and compares the output to the file `exp_output_1.txt`. Run the grader with a command formatted like this:  
+```
+./grader.py <json file name> <student source code>
+```  
+Output looks like this, depending on if you run the correct or wrong string fun file:  
+ 
 **Correct**
 ```
 Tests to be run:
@@ -187,4 +192,3 @@ Your percent 18.18%
 * Python
 * C
 * Haskell
-* Pascal
