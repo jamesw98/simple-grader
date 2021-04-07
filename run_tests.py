@@ -4,21 +4,32 @@ from read_json import print_test_info
 
 import subprocess as sp
 
-def grade(grading_json_filename, exe_name):
+def grade(grading_json_filename, prog_name):
+    # makes sure the grading data is valid
     if (load_grading_data(grading_json_filename) == None):      
         return
 
-    if (".py" not in exe_name and ".hs" not in exe_name):
-        print("Invalid program type, currently only Python and Haskell are supported")
+    # makes sure the file is able to be run by the grader
+    if (not check_extension(prog_name)):
         return
 
+    # prints the test info
     print_test_info()
 
+    # runs tests and displays results
     for test in get_all_tests():
-        run_test(test, exe_name)
+        run_test(test, prog_name)
+
+# checks if program has valid extension
+def check_extension(prog_name) -> bool:
+    if (".py" not in prog_name and ".hs" not in prog_name and ".pas" not in prog_name and ".c" not in prog_name):
+        print("Invalid program type, currently only Python and Haskell are supported")
+        return False
+
+    return True
 
 # runs tests
-def run_test(test, exe_name):
+def run_test(test, prog_name):
     print(f"\nRunning test: {test.name}")
 
     # renames variables to make it easier to read
@@ -30,11 +41,11 @@ def run_test(test, exe_name):
     test_expected = test.expected_output_file
     
     # checks for python or haskell
-    if (".py" in exe_name):
-        student_exe = sp.run(["python3", exe_name, test_filename], universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    if (".py" in prog_name):
+        student_exe = sp.run(["python3", prog_name, test_filename], universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
     # compiles and runs the haskell program
     else:
-        sp.run(["ghc", "-o", "student_exe", exe_name])
+        sp.run(["ghc", "-o", "student_exe", prog_name])
         student_exe = sp.run(["./student_exe"], universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
 
     # determine if the program is writint to stdout or a file
@@ -83,8 +94,8 @@ def calc_percent(student_score, points):
 def print_error(num, expected, received, points_off):
     print(f"\nError Line #{str(num)}")
     print(f"- {str(points_off)} points")
-    print(f"Expected: {expected[:-1]}")
-    print(f"Received: {received[:-1]}")
+    print(f"Expected: {expected}")
+    print(f"Received: {received}")
 
 # compares a student line to an expected line
 def check_line(student_line, expected_line):
