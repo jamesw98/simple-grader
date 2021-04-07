@@ -1,0 +1,31 @@
+{
+    "language": "c", 
+    "stdout": true,
+    "arguments": true,  
+    "tests": {
+        "test_basic": {
+            "input_filename": "test.txt",
+            "expected_output_filename": "test.txt",
+            "args": ["test.txt"],
+            "points": 40,
+            "points_off_per_wrong_line": 10,
+            "max_points_off": 40
+        },
+        "test_ryan": {
+            "input_filename": "test_2.txt",
+            "expected_output_filename": "test_2.txt",
+            "args": ["test_2.txt"],
+            "points": 90,
+            "points_off_per_wrong_line": 10,
+            "max_points_off": 90
+        },
+        "test_gman": {
+            "input_filename": "test_3.txt",
+            "expected_output_filename": "test_3.txt",
+            "args": ["test_3.txt"],
+            "points": 90,
+            "points_off_per_wrong_line": 10,
+            "max_points_off": 90
+        }
+    }
+}
