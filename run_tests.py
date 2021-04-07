@@ -3,6 +3,7 @@ from read_json import get_all_tests
 from read_json import print_test_info
 
 import subprocess as sp
+import os
 
 def grade(grading_json_filename, prog_name):
     # makes sure the grading data is valid
@@ -46,16 +47,28 @@ def run_test(test, prog_name):
     test_expected = test.expected_output_file
 
     try:
+        compiled = False
+        compiler = []
+
+        # TODO compiler flags
+        # TODO compressed (tar, zip)
         # checks for python or haskell
         if (".py" in prog_name):
             student_exe = sp.run(["python3", prog_name] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
         # compiles and runs the haskell program
         elif (".hs" in prog_name):
-            sp.run(["ghc", "-o", "student_exe", prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-            student_exe = sp.run(["./student_exe"] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            compiled = True
+            compiler.append("ghc")
+        # compiles and runs the c program 
         elif (".c" in prog_name):
-            sp.run(["gcc", "-o", "student_exe", prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            compiled = True
+            compiler.append("gcc")
+
+        # compiles and runs a compiled language (c, haskell)
+        if (compiled):
+            sp.run(compiler + ["-o", "student_exe", prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
             student_exe = sp.run(["./student_exe"] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            os.remove("student_exe")
 
     # student program crashed, or failed to compile
     except Exception as e:
