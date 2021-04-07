@@ -14,11 +14,17 @@ def grade(grading_json_filename, prog_name):
         return
 
     # prints the test info
-    print_test_info()
+    total_points = print_test_info()
+
+    total_score = 0
 
     # runs tests and displays results
     for test in get_all_tests():
-        run_test(test, prog_name)
+        total_score += run_test(test, prog_name)
+
+    print("\n" + "=" * 10 + " Results of All Tests " + "=" * 10)
+    print(f"\nYour score {total_score}/{total_points}")
+    print("Your percent " + str(round(calc_percent(total_score, total_points), 2)) + "%")
 
 # checks if program has valid extension
 def check_extension(prog_name) -> bool:
@@ -30,23 +36,25 @@ def check_extension(prog_name) -> bool:
 
 # runs tests
 def run_test(test, prog_name):
-    print(f"\nRunning test: {test.name}")
+    print("\n" + "=" * 10 + f" Running test: {test.name} " + "=" * 10)
 
     # renames variables to make it easier to read
     points = test.points
     points_off = test.points_off_per_line
     max_points = test.max_points_off
 
-    test_filename = test.input_file
     test_expected = test.expected_output_file
     
     # checks for python or haskell
     if (".py" in prog_name):
-        student_exe = sp.run(["python3", prog_name, test_filename], universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        student_exe = sp.run(["python3", prog_name] + test.arguments, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
     # compiles and runs the haskell program
-    else:
+    elif (".hs" in prog_name):
         sp.run(["ghc", "-o", "student_exe", prog_name])
-        student_exe = sp.run(["./student_exe"], universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        student_exe = sp.run(["./student_exe"] + test.arguments, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    elif (".c" in prog_name):
+        sp.run(["gcc", "-o", "student_exe", prog_name])
+        student_exe = sp.run(["./student_exe"] + test.arguments, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
 
     # determine if the program is writint to stdout or a file
     if (test.stdout):
@@ -80,6 +88,8 @@ def run_test(test, prog_name):
     print("\nYour score: " + str(student_score) + "/" + str(points))
     print("Your percent: " + str(round(calc_percent(student_score, points), 2)) + "%")
 
+    return student_score
+
 # checks and calculates a score for the student
 def check_score(student_score, points_off, points, max_points):
     if (student_score - points_off > points - max_points):
@@ -92,8 +102,11 @@ def calc_percent(student_score, points):
             
 # prints error message
 def print_error(num, expected, received, points_off):
+    expected = expected.replace("\n", "")
+    received = received.replace("\n", "")
+
     print(f"\nError Line #{str(num)}")
-    print(f"- {str(points_off)} points")
+    print(f"-{str(points_off)} points")
     print(f"Expected: {expected}")
     print(f"Received: {received}")
 

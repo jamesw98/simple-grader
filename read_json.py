@@ -7,12 +7,15 @@ ERROR_START = "Error: Test: '"
 
 all_tests = []
 
+# gets all the test
 def get_all_tests():
     return all_tests
 
 # prints out test info
 def print_test_info():
     print("Tests to be run:")
+
+    total_points = 0
     
     count = 0
     for test in all_tests:
@@ -20,6 +23,11 @@ def print_test_info():
         print("   Points: " + str(test.points))
         print("   Input File: " + test.input_file)
         count += 1
+        total_points += test.points
+
+    return total_points
+    
+    
 
 # loads the grading data from a json file
 # returns None on failure, a list of tests on success 
@@ -46,11 +54,7 @@ def load_grading_data(filename):
 def validate_json(data) -> bool:
     stdout = True
 
-    if ("total_points" not in data):
-        print("Error: Missing 'total_points'")
-        return False
-
-    if ("tests" not in data ):
+    if ("tests" not in data):
         print("Error: 'tests' was not included")
         return False
 
@@ -58,10 +62,15 @@ def validate_json(data) -> bool:
         print("Error: 'tests' included, but is empty")
         return False
     
+    if ("arguments" not in data):
+        print("Error: 'arguments' not included")
+        return False
+    
     if ("stdout" not in data):
         print("Warning: Missing 'stdout', defaulting to 'true'")
     else: 
-        stdout = False
+        if (not data["stdout"]):
+            stdout = False
         if (not data["stdout"] and "student_output" not in data):
             print("Error: 'student_output' missing while 'stdout' is false is not valid")
             return False
@@ -86,6 +95,15 @@ def validate_json(data) -> bool:
             return False
 
         points = curr_test["points"]
+
+        if ("arguments" in data):
+            if ("args" not in curr_test):
+                print(f"{ERROR_START} {test} does not have arguments")
+                return False
+
+            args = curr_test["args"]      
+        else:
+            args = []
         
         if ("points_off_per_wrong_line" not in curr_test):
             print("Warning: 'points_off_per_wrong_line' missing, defaulting to '1'")
@@ -104,6 +122,6 @@ def validate_json(data) -> bool:
         else:
             student_output = data["student_output"]
 
-        all_tests.append(Test(test, points, input_filename, expected_output_filename, points_per_line, max_off, stdout, student_output))
+        all_tests.append(Test(test, points, input_filename, expected_output_filename, points_per_line, max_off, stdout, student_output, args))
     
     return True
