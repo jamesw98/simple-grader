@@ -7,7 +7,7 @@ import subprocess as sp
 import os
 
 # compiles the student's programs
-def compile(prog_name, compiler, language, compressed):
+def compile(prog_name, compiler, language, compressed, files):
     try:
         if (not compressed):
             if (language == "java"):
@@ -16,7 +16,7 @@ def compile(prog_name, compiler, language, compressed):
                 sp.run(compiler + ["-o", "student_exe", prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
         else:
             if (language == "java"):
-                sp.run(compiler + ["*.java"], shell=True, check=True, universal_newlines=True) # TODO fix this, glob usage seems to not work with javac for some godforsaken reason
+                sp.run(compiler + files, check=True, universal_newlines=True) # TODO fix this, glob usage seems to not work with javac for some godforsaken reason
             elif (language == "c" or language == "haskell"):
                 sp.run(compiler + ["-o", "student_exe", "*.c"], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
             
@@ -28,7 +28,8 @@ def compile(prog_name, compiler, language, compressed):
 # removes compiled executables/.class files 
 def remove_exe(prog_name, language, compressed):
     if (compressed and language == "java"):
-        os.remove("*.class") # probably shouldn't do *, but works for now
+        # os.remove("*.class") # probably shouldn't do *, but works for now
+        pass
     elif (language == "java"):
         os.remove(prog_name.replace(".java", "") + ".class")
     elif (language == "c" or language == "haskell"):
@@ -52,8 +53,14 @@ def grade(grading_json_filename, prog_name):
     # gets the language this assignment is written in
     language = get_language()
 
+    compressed_output = []
     if (".zip" in prog_name):
-        sp.run(["unzip", prog_name], stdout=sp.PIPE, stderr=sp.PIPE)
+        # actually unzip the files
+        sp.run(["unzip", "-u", prog_name], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE)
+
+        # get the files that were unzipped
+        out = sp.run(["unzip", "-v", prog_name], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE) 
+        compressed_output = out.stdout.split("\n")
         compressed = True
     elif (".tar" in prog_name):
         compressed = True
@@ -70,9 +77,15 @@ def grade(grading_json_filename, prog_name):
     elif (language == "java"):
         compiled = True
         compiler.append("javac")
+
+    compressed_to_compile = []
+    if (compressed):
+        for line in compressed_output:
+            if (language == "java" and ".java" in line):
+                compressed_to_compile.append(line[58:]) # oops, magic number
     
     # if the program needs to be compiled, compile it
-    if (compiled and not compile(prog_name, compiler, language, compressed)):
+    if (compiled and not compile(prog_name, compiler, language, compressed, compressed_to_compile)):
         return
 
     # prints the test info
@@ -122,8 +135,8 @@ def run_test(test, prog_name, compiled, language, compressed):
         # compiles and runs a compiled language (c, haskell)
         elif (compiled):
             if (compressed and language == "java"):
-                student_exe = sp.run(["java", main] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-            if (language == "java"):
+                student_exe = sp.run(["java", test.main] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            elif (language == "java"):
                 student_exe = sp.run(["java", prog_name.replace(".java", "")] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
             elif (language == "c" or language == "haskell"):
                 student_exe = sp.run(["./student_exe"] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
