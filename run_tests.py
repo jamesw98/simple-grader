@@ -1,12 +1,28 @@
 from read_json import load_grading_data
 from read_json import get_all_tests
 from read_json import print_test_info
+from read_json import get_language
 
 import subprocess as sp
 import os
 
+# compiles the student's programs
+def compile(prog_name, compiler):
+    if (".java" in prog_name):
+        sp.run(compiler + [prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    elif (".c" in prog_name or ".hs" in prog_name):
+        sp.run(compiler + ["-o", "student_exe", prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+
+# removes compiled executables/.class files 
+def remove_exe(prog_name):
+    if (".java" in prog_name):
+        os.remove(prog_name.replace(".java", "") + ".class")
+    elif (".c" in prog_name or ".hs" in prog_name):
+        os.remove("student_exe")
+
 # grades a student program
 def grade(grading_json_filename, prog_name):
+
     compiled = False
     compiler = []
 
@@ -18,33 +34,31 @@ def grade(grading_json_filename, prog_name):
     if (not check_extension(prog_name)):
         return
 
+    # gets the language this assignment is written in
+    language = get_language()
+
     if (".zip" in prog_name):
-        # decompress, put into folder
         pass
     elif (".tar" in prog_name):
         # decompress, put into folder
         pass    
     
     # haskell
-    if (".hs" in prog_name):
+    if (language == "haskell"):
         compiled = True
         compiler.append("ghc")
     # c
-    elif (".c" in prog_name):
+    elif (language == "c"):
         compiled = True
         compiler.append("gcc")
     # java
-    elif (".java" in prog_name):
+    elif (language == "java"):
         compiled = True
         compiler.append("javac")
     
     # if the program needs to be compiled, compile it
     if (compiled):
-        # TODO make this a function
-        if (".java" in prog_name):
-            sp.run(compiler + [prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-        elif (".c" in prog_name or ".hs" in prog_name):
-            sp.run(compiler + ["-o", "student_exe", prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        compile(prog_name, compiler)
 
     # prints the test info
     total_points = print_test_info()
@@ -52,15 +66,11 @@ def grade(grading_json_filename, prog_name):
 
     # runs tests and displays results
     for test in get_all_tests():
-        total_score += run_test(test, prog_name, compiled)
+        total_score += run_test(test, prog_name, compiled, language)
 
     # if the langauge is compiled, remove the executable
     if (compiled):
-        # TODO make this a function
-        if (".java" in prog_name):
-            os.remove(prog_name.replace(".java", "") + ".class")
-        elif (".c" in prog_name or ".hs" in prog_name):
-            os.remove("student_exe")
+        remove_exe(prog_name)
 
     # display over all results
     print("\n" + "=" * 10 + " Results of All Tests " + "=" * 10)
@@ -77,7 +87,7 @@ def check_extension(prog_name) -> bool:
     return True
 
 # runs tests
-def run_test(test, prog_name, compiled):
+def run_test(test, prog_name, compiled, language):
     print("\n" + "=" * 10 + f" Running test: {test.name} " + "=" * 10)
 
     # renames variables to make it easier to read
@@ -91,14 +101,14 @@ def run_test(test, prog_name, compiled):
         # TODO compressed (tar, zip)
 
         # runs python program
-        if (".py" in prog_name):
+        if (language == "python"):
             student_exe = sp.run(["python3", prog_name] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
     
         # compiles and runs a compiled language (c, haskell)
         elif (compiled):
-            if (".java" in prog_name):
+            if (language == "java"):
                 student_exe = sp.run(["java", prog_name.replace(".java", "")] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-            elif (".c" in prog_name or ".hs" in prog_name):
+            elif (language == "c" or language == "haskell"):
                 student_exe = sp.run(["./student_exe"] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
 
     # student program crashed, or failed to compile

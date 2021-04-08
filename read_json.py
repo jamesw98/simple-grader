@@ -6,6 +6,7 @@ from test import Test
 ERROR_START = "Error: Test: '"
 
 all_tests = []
+language = []
 
 # gets all the test
 def get_all_tests():
@@ -46,11 +47,15 @@ def load_grading_data(filename):
         print("Error: could not load file: '" + filename + "'")
         return None
 
-    
+def get_language():
+    return language[0]
+
 # ensures the json is valid and adds the tests to the list of all tests
 # returns true if everything is valid, false is something is wrong
 def validate_json(data) -> bool:
     stdout = True
+
+    language.append(data["language"])
 
     # ensures proper formatting for the base json
     # tests
@@ -118,6 +123,8 @@ def validate_json(data) -> bool:
         if ("points_off_per_wrong_line" not in curr_test):
             print(f"{ERROR_START} {test}' does not have 'points_off_per_wrong_line'")
             return False
+
+        points_per_line = curr_test["points_off_per_wrong_line"]
 
         # checks if max points off was specified, if not, defaults to the total points for that test
         if ("max_points_off" not in curr_test):
