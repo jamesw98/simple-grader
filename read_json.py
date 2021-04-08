@@ -54,6 +54,7 @@ def get_language():
 # returns true if everything is valid, false is something is wrong
 def validate_json(data) -> bool:
     stdout = True
+    main = ""
 
     language.append(data["language"])
 
@@ -82,6 +83,14 @@ def validate_json(data) -> bool:
         if (not data["stdout"] and "student_output" not in data):
             print("Error: 'student_output' missing while 'stdout' is false is not valid")
             return False
+    
+    # checks if the submission is compressed (zip/tar)
+    if ("compressed" in data):
+        if (data["compressed"] and data["language"] == "java" and "main" not in data):
+            print("Error for compressed Java submissions, you must also have a 'main' field in the json file")
+            return False
+        else:   
+            main = data["main"]
 
     # checks each test
     for test in data["tests"]:
@@ -141,6 +150,6 @@ def validate_json(data) -> bool:
             student_output = data["student_output"]
 
         # adds the test
-        all_tests.append(Test(test, points, input_filename, expected_output_filename, points_per_line, max_off, stdout, student_output, args))
+        all_tests.append(Test(test, points, input_filename, expected_output_filename, points_per_line, max_off, stdout, student_output, args, main))
     
     return True

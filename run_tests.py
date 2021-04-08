@@ -7,23 +7,38 @@ import subprocess as sp
 import os
 
 # compiles the student's programs
-def compile(prog_name, compiler):
-    if (".java" in prog_name):
-        sp.run(compiler + [prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-    elif (".c" in prog_name or ".hs" in prog_name):
-        sp.run(compiler + ["-o", "student_exe", prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+def compile(prog_name, compiler, language, compressed):
+    try:
+        if (not compressed):
+            if (language == "java"):
+                sp.run(compiler + [prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            elif (language == "c" or language == "haskell"):
+                sp.run(compiler + ["-o", "student_exe", prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        else:
+            if (language == "java"):
+                sp.run(compiler + ["*.java"], shell=True, check=True, universal_newlines=True) # TODO fix this, glob usage seems to not work with javac for some godforsaken reason
+            elif (language == "c" or language == "haskell"):
+                sp.run(compiler + ["-o", "student_exe", "*.c"], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            
+        return True
+    except Exception as e:
+        print(f"FATAL: Your program didn't compile! No points earned!\n{e}")
+        return False
 
 # removes compiled executables/.class files 
-def remove_exe(prog_name):
-    if (".java" in prog_name):
+def remove_exe(prog_name, language, compressed):
+    if (compressed and language == "java"):
+        os.remove("*.class") # probably shouldn't do *, but works for now
+    elif (language == "java"):
         os.remove(prog_name.replace(".java", "") + ".class")
-    elif (".c" in prog_name or ".hs" in prog_name):
+    elif (language == "c" or language == "haskell"):
         os.remove("student_exe")
 
 # grades a student program
 def grade(grading_json_filename, prog_name):
 
     compiled = False
+    compressed = False
     compiler = []
 
     # makes sure the grading data is valid
@@ -38,10 +53,10 @@ def grade(grading_json_filename, prog_name):
     language = get_language()
 
     if (".zip" in prog_name):
-        pass
+        sp.run(["unzip", prog_name], stdout=sp.PIPE, stderr=sp.PIPE)
+        compressed = True
     elif (".tar" in prog_name):
-        # decompress, put into folder
-        pass    
+        compressed = True
     
     # haskell
     if (language == "haskell"):
@@ -57,8 +72,8 @@ def grade(grading_json_filename, prog_name):
         compiler.append("javac")
     
     # if the program needs to be compiled, compile it
-    if (compiled):
-        compile(prog_name, compiler)
+    if (compiled and not compile(prog_name, compiler, language, compressed)):
+        return
 
     # prints the test info
     total_points = print_test_info()
@@ -66,11 +81,11 @@ def grade(grading_json_filename, prog_name):
 
     # runs tests and displays results
     for test in get_all_tests():
-        total_score += run_test(test, prog_name, compiled, language)
+        total_score += run_test(test, prog_name, compiled, language, compressed)
 
     # if the langauge is compiled, remove the executable
     if (compiled):
-        remove_exe(prog_name)
+        remove_exe(prog_name, language, compressed)
 
     # display over all results
     print("\n" + "=" * 10 + " Results of All Tests " + "=" * 10)
@@ -87,7 +102,7 @@ def check_extension(prog_name) -> bool:
     return True
 
 # runs tests
-def run_test(test, prog_name, compiled, language):
+def run_test(test, prog_name, compiled, language, compressed):
     print("\n" + "=" * 10 + f" Running test: {test.name} " + "=" * 10)
 
     # renames variables to make it easier to read
@@ -106,6 +121,8 @@ def run_test(test, prog_name, compiled, language):
     
         # compiles and runs a compiled language (c, haskell)
         elif (compiled):
+            if (compressed and language == "java"):
+                student_exe = sp.run(["java", main] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
             if (language == "java"):
                 student_exe = sp.run(["java", prog_name.replace(".java", "")] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
             elif (language == "c" or language == "haskell"):
@@ -113,7 +130,7 @@ def run_test(test, prog_name, compiled, language):
 
     # student program crashed, or failed to compile
     except Exception as e:
-        print(f"\nFATAL: Your program crashed or didn't compile! No points earned!\n{e}")
+        print(f"\nFATAL: Your program crashed! No points earned!\n{e}")
         return 0
 
     # determine if the program is writint to stdout or a file
