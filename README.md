@@ -1,8 +1,9 @@
 # Simple Grader
-### Introduction
+## Introduction
 This tool lets graders grade a programs written by students in a variety of languages (supported languages below), assuming the system you are running the grading script on has the compilers installed. It will print the results to `stdout`, but you can always pipe it to a file. I plan on adding writing results to a file soon. 
-### How to Use: Simple Example
-Start by writing a JSON file with info on grading, here is a simple template (`test.json` in this git repo):  
+## How to Use
+### Simple Example
+Start by writing a JSON file with info on grading, here is a simple template (`examples/test.json` in this git repo):  
 ```json
 {
     "language": "python",
@@ -20,7 +21,7 @@ Start by writing a JSON file with info on grading, here is a simple template (`t
     }
 }
 ```
-This file has the minimum required data if the program you are grading takes input from a file, whose name is passed in `stdin` (currently the only supported means of input). This specific test json was written for the `string_fun_*.py` files, which are in this repo. These files output to `stdout`, so the grader captures that and compares the output to the file `exp_output_1.txt`. Run the grader with a command formatted like this:  
+This file has the minimum required data if the program you are grading takes input from a file, whose name is passed in `stdin` (currently the only supported means of input). This specific test json was written for the `examples/string_fun_*.py` files, which are in this repo. These files output to `stdout`, so the grader captures that and compares the output to the file `examples/exp_output_1.txt`. Run the grader with a command formatted like this:  
 ```
 ./grader.py <json file name> <student source code>
 ```  
@@ -78,7 +79,7 @@ Your score 80/110
 Your percent 72.73%
 ```  
 Yes, test numbers start at 0, to quote one of my professors, "All goodhearted people start counting at 0."  
-### How to Use: Multiple Tests
+### Multiple Tests
 If you want to have more than one test per run, you can construct your json file like this:  
 ```json
 {
@@ -113,7 +114,7 @@ If you want to have more than one test per run, you can construct your json file
     }
 }
 ```
-This json file (`args_test.json`) with the corresponding txt files and the c file that this was made to grade (`args_test.c` and `args_test_wrong.c`) are included in this repo. The output will look like this: 
+This json file (`examples/args_test.json`) with the corresponding txt files and the c file that this was made to grade (`examples/args_test.c` and `examples/args_test_wrong.c`) are included in this repo. The output will look like this: 
 ```
 Tests to be run:
 0. test_basic
@@ -153,7 +154,7 @@ Your score 220/220
 Your percent 100.0%
 ```
 ### Crashing/Not Compiling Checking
-The grader will also check if the student's program crashes or fails to compile. Here is some output of a version of `args_test.c` that segfaults on tests 1 and 2: 
+The grader will also check if the student's program crashes or fails to compile. Here is some output of a version of `examples/args_test.c` that segfaults on tests 1 and 2: 
 ```
 Tests to be run:
 0. test_basic
@@ -188,7 +189,35 @@ Command '['./student_exe', 'test_3.txt']' died with <Signals.SIGSEGV: 11>.
 Your score 40/220
 Your percent 18.18%
 ```
-### Supported Languages
+### Compressed Submissions
+The grader can also take `.tar` and `.zip` compressed files as submissions. The grader will then unpack them, and compile the files inside based on the language. For example, `test.zip` and `test.tar` have two files in them, `tri_main.java` and `triangle.java`. If you are using a compressed submission that has Java as the language, you will also have to specify a "main" so the grader knows what class contains the main function. This is not required for other supported languages. Here is an example of a compressed submission json:
+```json
+{
+    "language": "java", 
+    "compressed": true,
+    "stdout": true,
+    "arguments": false,  
+    "main": "tri_main",
+    "tests": {
+        "test_basic": {
+            "input_filename": "test.txt",
+            "expected_output_filename": "test_zip.txt",
+            "args": [""],
+            "points": 40,
+            "points_off_per_wrong_line": 10,
+            "max_points_off": 40
+        }
+    }
+}
+```
+This would work for both `.tar` and `.zip` submissions.
+### Supported Languages/Submission Formats
+#### Languages
 * Python
 * C
 * Haskell
+* Java
+#### Submission Formats
+* Single File (.py, .c, .hs, etc)
+* .tar
+* .zip
