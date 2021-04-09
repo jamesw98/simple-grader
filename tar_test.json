@@ -1,0 +1,17 @@
+{
+    "language": "java", 
+    "compressed": true,
+    "stdout": true,
+    "arguments": false,  
+    "main": "tri_main",
+    "tests": {
+        "test_basic": {
+            "input_filename": "test.txt",
+            "expected_output_filename": "test_zip.txt",
+            "args": [""],
+            "points": 40,
+            "points_off_per_wrong_line": 10,
+            "max_points_off": 40
+        }
+    }
+}

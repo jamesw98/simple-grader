@@ -54,15 +54,16 @@ def grade(grading_json_filename, prog_name):
     language = get_language()
 
     compressed_output = []
+    compressed_to_compile = []
     if (".zip" in prog_name):
         # actually unzip the files
         sp.run(["unzip", "-u", prog_name], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE)
-
         # get the files that were unzipped
-        out = sp.run(["unzip", "-v", prog_name], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE) 
-        compressed_output = out.stdout.split("\n")
+        compressed_output = sp.run(["unzip", "-v", prog_name], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE).stdout.split("\n")
         compressed = True
     elif (".tar" in prog_name):
+        out = sp.run(["tar", "-xvf", prog_name], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE)
+        compressed_to_compile = out.stdout.split("\n")[:-1] # this always includes one extra line, so strip that one off
         compressed = True
     
     # haskell
@@ -78,11 +79,13 @@ def grade(grading_json_filename, prog_name):
         compiled = True
         compiler.append("javac")
 
-    compressed_to_compile = []
-    if (compressed):
+    # get the java files to compile
+    # since globs don't work with subprocess for some reason, I can't just do 'sp.run(javac *.java')
+    # this doesn't need to be run for tar files, since the output from `tar -xvf` is just the files in the tar
+    if (compressed and ".zip" in prog_name):
         for line in compressed_output:
             if (language == "java" and ".java" in line):
-                compressed_to_compile.append(line[58:]) # oops, magic number
+                compressed_to_compile.append(line[58:]) # oops, magic number, strips the filenames out of `unzip -v`
     
     # if the program needs to be compiled, compile it
     if (compiled and not compile(prog_name, compiler, language, compressed, compressed_to_compile)):
