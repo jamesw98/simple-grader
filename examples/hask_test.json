@@ -2,7 +2,6 @@
     "language": "haskell",
     "stdout": false,
     "student_output": "output.txt",
-    "arguments": false,
     "tests": {
         "test_basic": {
             "input_filename": "input.txt",

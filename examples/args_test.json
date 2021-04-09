@@ -1,7 +1,6 @@
 {
     "language": "c", 
     "stdout": true,
-    "arguments": true,  
     "tests": {
         "test_basic": {
             "input_filename": "test.txt",

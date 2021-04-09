@@ -2,7 +2,6 @@
     "language": "java", 
     "compressed": true,
     "stdout": true,
-    "arguments": false,  
     "main": "tri_main",
     "tests": {
         "test_basic": {
