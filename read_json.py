@@ -7,6 +7,7 @@ ERROR_START = "Error: Test: '"
 
 all_tests = []
 language = []
+flags = []
 
 # gets all the test
 def get_all_tests():
@@ -50,6 +51,10 @@ def load_grading_data(filename):
 def get_language():
     return language[0]
 
+def get_flags():
+    print(flags)
+    return flags
+
 # ensures the json is valid and adds the tests to the list of all tests
 # returns true if everything is valid, false is something is wrong
 def validate_json(data) -> bool:
@@ -57,6 +62,10 @@ def validate_json(data) -> bool:
     main = ""
 
     language.append(data["language"])
+
+    if ("flags" in data):
+        for f in data["flags"]:
+            flags.append(f)
 
     # ensures proper formatting for the base json
     # tests

@@ -2,21 +2,21 @@ from read_json import load_grading_data
 from read_json import get_all_tests
 from read_json import print_test_info
 from read_json import get_language
+from read_json import get_flags
 
 import subprocess as sp
 import os
 
-# TODO compiler flags
 # TODO display input line for incorrect output lines
 
 # compiles the student's programs
-def compile(prog_name, compiler, language, compressed, files):
+def compile(prog_name, compiler, language, compressed, files, flags):
     try:
         if (not compressed):
             if (language == "java"):
                 sp.run(compiler + [prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
             elif (language == "c" or language == "haskell"):
-                sp.run(compiler + ["-o", "student_exe", prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+                sp.run(compiler + ["-o", "student_exe", prog_name] + flags, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
         else:
             if (language == "java"):
                 sp.run(compiler + files, check=True, universal_newlines=True)
@@ -91,7 +91,7 @@ def grade(grading_json_filename, prog_name):
                 compressed_to_compile.append(line[58:]) # oops, magic number, strips the filenames out of `unzip -v`
     
     # if the program needs to be compiled, compile it
-    if (compiled and not compile(prog_name, compiler, language, compressed, compressed_to_compile)):
+    if (compiled and not compile(prog_name, compiler, language, compressed, compressed_to_compile, get_flags())):
         return
 
     # prints the test info
