@@ -78,11 +78,6 @@ def validate_json(data) -> bool:
         print("Error: 'tests' included, but is empty")
         return False
     
-    # makes sure arguments is either true or false
-    if ("arguments" not in data):
-        print("Error: 'arguments' not included")
-        return False
-    
     # checks if stdout is specified
     if ("stdout" not in data):
         print("Warning: Missing 'stdout', defaulting to 'true'")
@@ -127,12 +122,8 @@ def validate_json(data) -> bool:
 
         points = curr_test["points"]
 
-        # makes sure there are arguments 
-        if (data["arguments"]):
-            if ("args" not in curr_test):
-                print(f"{ERROR_START} {test}' does not have arguments")
-                return False
-
+        # if there are arguments, add them
+        if ("args" in curr_test):
             args = curr_test["args"]      
         else:
             args = []
