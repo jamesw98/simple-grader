@@ -1,0 +1,13 @@
+ispalindrome 
+ispalindrome notapalindrome
+ispalindrome 12321
+ispalindrome racecar
+
+reverse 
+reverse cat
+reverse racecar
+
+occurenceof 
+occurenceof a
+occurenceof A attack
+occurenceof a attack
