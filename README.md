@@ -211,13 +211,13 @@ The grader can also take `.tar` and `.zip` compressed files as submissions. The 
 }
 ```
 This would work for both `.tar` and `.zip` submissions.
-### Supported Languages/Submission Formats
-#### Languages
+## Supported Languages/Submission Formats
+### Languages
 * Python
 * C
 * Haskell
 * Java
-#### Submission Formats
+### Submission Formats
 * Single File (.py, .c, .hs, etc)
 * .tar
 * .zip
