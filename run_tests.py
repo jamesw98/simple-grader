@@ -6,6 +6,9 @@ from read_json import get_language
 import subprocess as sp
 import os
 
+# TODO compiler flags
+# TODO display input line for incorrect output lines
+
 # compiles the student's programs
 def compile(prog_name, compiler, language, compressed, files):
     try:
@@ -16,7 +19,7 @@ def compile(prog_name, compiler, language, compressed, files):
                 sp.run(compiler + ["-o", "student_exe", prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
         else:
             if (language == "java"):
-                sp.run(compiler + files, check=True, universal_newlines=True) # TODO fix this, glob usage seems to not work with javac for some godforsaken reason
+                sp.run(compiler + files, check=True, universal_newlines=True)
             elif (language == "c" or language == "haskell"):
                 sp.run(compiler + ["-o", "student_exe", "*.c"], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
             
@@ -121,26 +124,26 @@ def check_extension(prog_name) -> bool:
 def run_test(test, prog_name, compiled, language, compressed):
     print("\n" + "=" * 10 + f" Running test: {test.name} " + "=" * 10)
 
-    # renames variables to make it easier to read
     points = test.points
     points_off = test.points_off_per_line
     max_points = test.max_points_off
     test_expected = test.expected_output_file
+    input_lines = open(test.input_file, "r").readlines()
 
     try:
-        # TODO compiler flags
-        # TODO compressed (tar, zip)
-
         # runs python program
         if (language == "python"):
             student_exe = sp.run(["python3", prog_name] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
     
         # compiles and runs a compiled language (c, haskell)
         elif (compiled):
+            # if the submission was compressed, run the main file
             if (compressed and language == "java"):
                 student_exe = sp.run(["java", test.main] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            # if the submission is only one java file, run the one file
             elif (language == "java"):
                 student_exe = sp.run(["java", prog_name.replace(".java", "")] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            # if the language is c or haskell, run the compiled executable
             elif (language == "c" or language == "haskell"):
                 student_exe = sp.run(["./student_exe"] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
 
@@ -164,20 +167,23 @@ def run_test(test, prog_name, compiled, language, compressed):
         # checks for missing line at end of file/stdout
         if (i > len(student_output) - 1):
             student_score = check_score(student_score, points_off, points, max_points)
-            print_error(i, expected_output[i], "<empty line>", points_off)
+            print_error(i, expected_output[i], "<empty line>", points_off, input_lines)
             continue
         
         # checks for incorrect line
         if (not check_line(student_output[i], expected_output[i])):
             student_score = check_score(student_score, points_off, points, max_points)
-            print_error(i, expected_output[i], student_output[i], points_off)
+            print_error(i, expected_output[i], student_output[i], points_off, input_lines)
 
+    # if the student got more points off than the max points, reset the score
     if (student_score < points - max_points):
         student_score = points - max_points
-
-    if (student_score == points):
+        
+    # special message for 100%
+    elif (student_score == points):
         print("\nNo errors! Congratulations!")
 
+    # display score
     print("\nYour score: " + str(student_score) + "/" + str(points))
     print("Your percent: " + str(round(calc_percent(student_score, points), 2)) + "%")
 
@@ -194,12 +200,17 @@ def calc_percent(student_score, points):
     return 100 * float(student_score) / float(points)
             
 # prints error message
-def print_error(num, expected, received, points_off):
+def print_error(num, expected, received, points_off, input_lines):
     expected = expected.replace("\n", "")
     received = received.replace("\n", "")
 
-    print(f"\nError Line #{str(num)}")
-    print(f"-{str(points_off)} points")
+    if ("\n" in input_lines[num]):
+        line = input_lines[num].replace("\n", "")
+    else:
+        line = input_lines[num]
+
+    print(f"\nError Line #{str(num)} -{str(points_off)} points")
+    print(f"Input:    {line}")
     print(f"Expected: {expected}")
     print(f"Received: {received}")
 
