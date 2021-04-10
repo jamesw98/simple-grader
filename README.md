@@ -36,7 +36,6 @@ This file has the minimum required data if the program you are grading takes inp
 ./grader.py <json file name> <student source code>
 ```  
 Output looks like this, depending on if you run the correct or wrong string fun file:  
- 
 **Correct**
 ```
 Tests to be run:
