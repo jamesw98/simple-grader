@@ -7,7 +7,7 @@ Start by writing a JSON file with info on grading, here is a simple template (`e
 ```json
 {
     "language": "python",
-    "arguments": true,
+    "total_points": 110,
     "stdout": true,
     "tests": {
         "test_basic": {
@@ -55,20 +55,20 @@ Tests to be run:
 
 ========== Running test: test_basic ==========
 
-Error Line #5
--10 points
+Error Line #5 -10 points
+Input:    reverse cat
 Expected: cat reversed is: "tac"
 Received: cat reversed is: "cat"
 
-Error Line #9
--10 points
-Expected: "A" occures 0 times in "attack"
-Received: "A" occures 1 times in "attack"
+Error Line #9 -10 points
+Input:    occurenceof A attack
+Expected: "A" occurs 0 times in "attack"
+Received: "A" occurs 1 times in "attack"
 
-Error Line #10
--10 points
-Expected: "a" occures 2 times in "attack"
-Received: "a" occures 3 times in "attack"
+Error Line #10 -10 points
+Input:    occurenceof a attack
+Expected: "a" occurs 2 times in "attack"
+Received: "a" occurs 3 times in "attack"
 
 Your score: 80/110
 Your percent: 72.73%
@@ -78,14 +78,28 @@ Your percent: 72.73%
 Your score 80/110
 Your percent 72.73%
 ```  
-Yes, test numbers start at 0, to quote one of my professors, "All goodhearted people start counting at 0."  
+When a mismatched line is found, the grader will display the input that caused that line, the expected output, and the output from their program.
+### Command Line Arguments
+If the submitted file expects command line arguments, you can simple add the `args` key to each test in the json file. Here is an example:
+```json
+...
+    "test_basic": {
+            "input_filename": "test.txt",
+            "expected_output_filename": "test.txt",
+            "args": ["test.txt"],
+            "points": 40,
+            "points_off_per_wrong_line": 10,
+            "max_points_off": 40
+    },
+...
+```
+In this example, `test.txt` will be passed as a command line argument to the student's submission. 
 ### Multiple Tests
 If you want to have more than one test per run, you can construct your json file like this:  
 ```json
 {
     "language": "c", 
     "stdout": true,
-    "arguments": true,  
     "tests": {
         "test_basic": {
             "input_filename": "test.txt",
