@@ -6,26 +6,16 @@ This tool lets graders grade a programs written by students in a variety of lang
 Start by writing a JSON file with info on grading, here is a simple template (`examples/test.json` in this git repo):  
 ```json
 {
-    // the language the submission is written in
     "language": "python", 
-    // total points for this submission
     "total_points": 110, 
-    // whether or not the submission writes to stdout
     "stdout": true, 
     "tests": { 
         "test_basic": {
-            // the input filename 
-            // (not necessarily the same as passed filename in some cases)
             "input_filename": "test_file_1.txt", 
-            // expected/correct output
             "expected_output_filename": "exp_output_1.txt", 
-            // any cmdline arguments for the submission
             "args": ["test_file_1.txt"], 
-            // points for this test
             "points": 110, 
-            // point deduction
             "points_off_per_wrong_line": 10, 
-            // max point deduction
             "max_points_off": 100 
         }
     }
