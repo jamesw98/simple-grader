@@ -210,7 +210,6 @@ The grader can also take `.tar` and `.zip` compressed files as submissions. The 
     "language": "java", 
     "compressed": true,
     "stdout": true,
-    "arguments": false,  
     "main": "tri_main",
     "tests": {
         "test_basic": {
