@@ -7,39 +7,18 @@ from read_json import get_flags
 import subprocess as sp
 import os
 
-# TODO display input line for incorrect output lines
 
-# compiles the student's programs
-def compile(prog_name, compiler, language, compressed, files, flags):
-    try:
-        if (not compressed):
-            if (language == "java"):
-                sp.run(compiler + [prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-            elif (language == "c" or language == "haskell"):
-                sp.run(compiler + ["-o", "student_exe", prog_name] + flags, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-        else:
-            if (language == "java"):
-                sp.run(compiler + files, check=True, universal_newlines=True)
-            elif (language == "c" or language == "haskell"):
-                sp.run(compiler + ["-o", "student_exe", "*.c"], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-            
-        return True
-    except Exception as e:
-        print(f"FATAL: Your program didn't compile! No points earned!\n{e}")
-        return False
-
-# removes compiled executables/.class files 
-def remove_exe(prog_name, language, compressed):
-    if (compressed and language == "java"):
-        # os.remove("*.class") # probably shouldn't do *, but works for now
-        pass
-    elif (language == "java"):
-        os.remove(prog_name.replace(".java", "") + ".class")
-    elif (language == "c" or language == "haskell"):
-        os.remove("student_exe")
 
 # grades a student program
-def grade(grading_json_filename, prog_name):
+def grade(grading_json_filename, prog_name, output_file_name=None):
+    print(output_file_name)
+
+    output_file = None
+    write_to_file = False
+
+    if(output_file_name):
+        write_to_file = True
+        output_file = open(output_file_name, "w")
 
     compiled = False
     compressed = False
@@ -58,6 +37,7 @@ def grade(grading_json_filename, prog_name):
 
     compressed_output = []
     compressed_to_compile = []
+
     if (".zip" in prog_name):
         # actually unzip the files
         sp.run(["unzip", "-u", prog_name], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE)
@@ -107,9 +87,46 @@ def grade(grading_json_filename, prog_name):
         remove_exe(prog_name, language, compressed)
 
     # display over all results
-    print("\n" + "=" * 10 + " Results of All Tests " + "=" * 10)
-    print(f"\nYour score {total_score}/{total_points}")
-    print("Your percent " + str(round(calc_percent(total_score, total_points), 2)) + "%")
+    if (write_to_file):
+        output_file.write("=" * 10 + " Results of All Tests " + "=" * 10)
+        output_file.write(f"\nYour score {total_score}/{total_points}\n")
+        output_file.write("Your percent " + str(round(calc_percent(total_score, total_points), 2)) + "%")
+    else:
+        print("\n" + "=" * 10 + " Results of All Tests " + "=" * 10)
+        print(f"\nYour score {total_score}/{total_points}")
+        print("Your percent " + str(round(calc_percent(total_score, total_points), 2)) + "%")
+
+# compiles the student's programs
+def compile(prog_name, compiler, language, compressed, files, flags, output_file=None):
+    try:
+        if (not compressed):
+            if (language == "java"):
+                sp.run(compiler + [prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            elif (language == "c" or language == "haskell"):
+                sp.run(compiler + ["-o", "student_exe", prog_name] + flags, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        else:
+            if (language == "java"):
+                sp.run(compiler + files, check=True, universal_newlines=True)
+            elif (language == "c" or language == "haskell"):
+                sp.run(compiler + ["-o", "student_exe", "*.c"], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            
+        return True
+    except Exception as e:
+        if (output_file):
+            pass
+        else:
+            print(f"FATAL: Your program didn't compile! No points earned!\n{e}")
+        return False
+
+# removes compiled executables/.class files 
+def remove_exe(prog_name, language, compressed):
+    if (compressed and language == "java"):
+        # os.remove("*.class") # probably shouldn't do *, but works for now
+        pass
+    elif (language == "java"):
+        os.remove(prog_name.replace(".java", "") + ".class")
+    elif (language == "c" or language == "haskell"):
+        os.remove("student_exe")
 
 # checks if program has valid extension
 def check_extension(prog_name) -> bool:

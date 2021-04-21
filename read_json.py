@@ -52,7 +52,6 @@ def get_language():
     return language[0]
 
 def get_flags():
-    print(flags)
     return flags
 
 # ensures the json is valid and adds the tests to the list of all tests
