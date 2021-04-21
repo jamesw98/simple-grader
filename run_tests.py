@@ -7,11 +7,8 @@ from read_json import get_flags
 import subprocess as sp
 import os
 
-
-
 # grades a student program
 def grade(grading_json_filename, prog_name, output_file_name=None):
-    print(output_file_name)
 
     output_file = None
     write_to_file = False
@@ -71,16 +68,16 @@ def grade(grading_json_filename, prog_name, output_file_name=None):
                 compressed_to_compile.append(line[58:]) # oops, magic number, strips the filenames out of `unzip -v`
     
     # if the program needs to be compiled, compile it
-    if (compiled and not compile(prog_name, compiler, language, compressed, compressed_to_compile, get_flags())):
+    if (compiled and not compile(prog_name, compiler, language, compressed, compressed_to_compile, get_flags(), output_file)):
         return
 
     # prints the test info
-    total_points = print_test_info()
+    total_points = print_test_info(output_file)
     total_score = 0
 
     # runs tests and displays results
     for test in get_all_tests():
-        total_score += run_test(test, prog_name, compiled, language, compressed)
+        total_score += run_test(test, prog_name, compiled, language, compressed, output_file)
 
     # if the langauge is compiled, remove the executable
     if (compiled):
@@ -88,7 +85,7 @@ def grade(grading_json_filename, prog_name, output_file_name=None):
 
     # display over all results
     if (write_to_file):
-        output_file.write("=" * 10 + " Results of All Tests " + "=" * 10)
+        output_file.write("\n" + "=" * 10 + " Results of All Tests " + "=" * 10)
         output_file.write(f"\nYour score {total_score}/{total_points}\n")
         output_file.write("Your percent " + str(round(calc_percent(total_score, total_points), 2)) + "%")
     else:
@@ -112,8 +109,10 @@ def compile(prog_name, compiler, language, compressed, files, flags, output_file
             
         return True
     except Exception as e:
+        # write error to output file, if being used
         if (output_file):
-            pass
+            output_file.write(f"FATAL: Your program didn't compile! No points earned!\n{e}")
+        # else, write to stdout
         else:
             print(f"FATAL: Your program didn't compile! No points earned!\n{e}")
         return False
@@ -138,8 +137,11 @@ def check_extension(prog_name) -> bool:
     return True
 
 # runs tests
-def run_test(test, prog_name, compiled, language, compressed):
-    print("\n" + "=" * 10 + f" Running test: {test.name} " + "=" * 10)
+def run_test(test, prog_name, compiled, language, compressed, output_file):
+    if (output_file):
+        output_file.write("\n" + "=" * 10 + f" Running test: {test.name} " + "=" * 10)
+    else:
+        print("\n" + "=" * 10 + f" Running test: {test.name} " + "=" * 10)
 
     points = test.points
     points_off = test.points_off_per_line
@@ -166,7 +168,10 @@ def run_test(test, prog_name, compiled, language, compressed):
 
     # student program crashed, or failed to compile
     except Exception as e:
-        print(f"\nFATAL: Your program crashed! No points earned!\n{e}")
+        if (output_file):
+            output_file.write(f"\nFATAL: Your program crashed! No points earned!\n{e}")
+        else:
+            print(f"\nFATAL: Your program crashed! No points earned!\n{e}")
         return 0
 
     # determine if the program is writint to stdout or a file
@@ -184,13 +189,13 @@ def run_test(test, prog_name, compiled, language, compressed):
         # checks for missing line at end of file/stdout
         if (i > len(student_output) - 1):
             student_score = check_score(student_score, points_off, points, max_points)
-            print_error(i, expected_output[i], "<empty line>", points_off, input_lines)
+            print_error(i, expected_output[i], "<empty line>", points_off, input_lines, output_file)
             continue
         
         # checks for incorrect line
         if (not check_line(student_output[i], expected_output[i])):
             student_score = check_score(student_score, points_off, points, max_points)
-            print_error(i, expected_output[i], student_output[i], points_off, input_lines)
+            print_error(i, expected_output[i], student_output[i], points_off, input_lines, output_file)
 
     # if the student got more points off than the max points, reset the score
     if (student_score < points - max_points):
@@ -198,11 +203,20 @@ def run_test(test, prog_name, compiled, language, compressed):
         
     # special message for 100%
     elif (student_score == points):
-        print("\nNo errors! Congratulations!")
+        # write to output file, if in use
+        if (output_file):
+            output_file.write("\nNo errors! Congratulations!\n")
+        # else write to stdout
+        else:
+            print("\nNo errors! Congratulations!")
 
     # display score
-    print("\nYour score: " + str(student_score) + "/" + str(points))
-    print("Your percent: " + str(round(calc_percent(student_score, points), 2)) + "%")
+    if (output_file):
+        output_file.write("\nYour score: " + str(student_score) + "/" + str(points) + "\n")
+        output_file.write("Your percent: " + str(round(calc_percent(student_score, points), 2)) + "%\n")
+    else:
+        print("\nYour score: " + str(student_score) + "/" + str(points))
+        print("Your percent: " + str(round(calc_percent(student_score, points), 2)) + "%")
 
     return student_score
 
@@ -217,7 +231,7 @@ def calc_percent(student_score, points):
     return 100 * float(student_score) / float(points)
             
 # prints error message
-def print_error(num, expected, received, points_off, input_lines):
+def print_error(num, expected, received, points_off, input_lines, output_file):
     expected = expected.replace("\n", "")
     received = received.replace("\n", "")
 
@@ -226,10 +240,18 @@ def print_error(num, expected, received, points_off, input_lines):
     else:
         line = input_lines[num]
 
-    print(f"\nError Line #{str(num)} -{str(points_off)} points")
-    print(f"Input:    {line}")
-    print(f"Expected: {expected}")
-    print(f"Received: {received}")
+    # write to output file, if in use
+    if (output_file):
+        output_file.write(f"\nError Line #{str(num)} -{str(points_off)} points\n")
+        output_file.write(f"Input:    {line}\n")
+        output_file.write(f"Expected: {expected}\n")
+        output_file.write(f"Received: {received}\n")
+    # else write to stdout
+    else:
+        print(f"\nError Line #{str(num)} -{str(points_off)} points")
+        print(f"Input:    {line}")
+        print(f"Expected: {expected}")
+        print(f"Received: {received}")
 
 # compares a student line to an expected line
 def check_line(student_line, expected_line):

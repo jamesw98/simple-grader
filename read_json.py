@@ -14,16 +14,24 @@ def get_all_tests():
     return all_tests
 
 # prints out test info, returns the max points
-def print_test_info():
-    print("Tests to be run:")
+def print_test_info(output_file):
+    if (output_file):
+        output_file.write("Tests to be run:\n")
+    else:
+        print("Tests to be run:")
 
     total_points = 0
     
     count = 0
     for test in all_tests:
-        print(str(count) + ". " + test.name)
-        print("   Points: " + str(test.points))
-        print("   Input File: " + test.input_file)
+        if (output_file):
+            output_file.write(str(count) + ". " + test.name + "\n")
+            output_file.write("   Points: " + str(test.points) + "\n")
+            output_file.write("   Input File: " + test.input_file + "\n")
+        else:
+            print(str(count) + ". " + test.name)
+            print("   Points: " + str(test.points))
+            print("   Input File: " + test.input_file)
         count += 1
         total_points += test.points
 
