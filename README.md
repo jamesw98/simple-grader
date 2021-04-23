@@ -2,6 +2,8 @@
 ## Introduction
 This tool lets graders grade a programs written by students in a variety of languages (supported languages below), assuming the system you are running the grading script on has the compilers installed. It will print the results to `stdout`, but you can always pipe it to a file. I plan on adding writing results to a file soon. 
 ## How to Use
+### Downloading and Running
+You can either clone this repo and run the `grader.py` file, or go to the [releases page](https://github.com/jamesw98/simple-grader/releases) to download the latest executable. 
 ### Simple Example
 Start by writing a JSON file with info on grading, here is a simple template (`examples/test.json` in this git repo):  
 ```json
