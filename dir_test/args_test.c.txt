@@ -1,0 +1,32 @@
+Tests to be run:
+0. test_basic
+   Points: 40
+   Input File: test.txt
+1. test_ryan
+   Points: 90
+   Input File: test_2.txt
+2. test_gman
+   Points: 90
+   Input File: test_3.txt
+
+========== Running test: test_basic ==========
+No errors! Congratulations!
+
+Your score: 40/40
+Your percent: 100.0%
+
+========== Running test: test_ryan ==========
+No errors! Congratulations!
+
+Your score: 90/90
+Your percent: 100.0%
+
+========== Running test: test_gman ==========
+No errors! Congratulations!
+
+Your score: 90/90
+Your percent: 100.0%
+
+========== Results of All Tests ==========
+Your score 220/220
+Your percent 100.0%
