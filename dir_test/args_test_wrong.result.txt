@@ -1,0 +1,76 @@
+Tests to be run:
+0. test_basic
+   Points: 40
+   Input File: test.txt
+1. test_ryan
+   Points: 90
+   Input File: test_2.txt
+2. test_gman
+   Points: 90
+   Input File: test_3.txt
+
+========== Running test: test_basic ==========
+Error Line #2 -10 points
+Input:    123
+Expected: 123
+Received: a123
+
+Error Line #3 -10 points
+Input:    321
+Expected: 321
+Received: 321a
+
+Your score: 20/40
+Your percent: 50.0%
+
+========== Running test: test_ryan ==========
+Error Line #2 -10 points
+Input:    'No!' says the man in the Vatican, 'It belongs to God.' 
+Expected: 'No!' says the man in the Vatican, 'It belongs to God.' 
+Received: a'No!' says the man in the Vatican, 'It belongs to God.' 
+
+Error Line #4 -10 points
+Input:    I rejected those answers; instead, I chose something different. 
+Expected: I rejected those answers; instead, I chose something different. 
+Received: aI rejected those answers; instead, I chose something different. 
+
+Error Line #6 -10 points
+Input:    where the scientist would not be bound by petty morality, 
+Expected: where the scientist would not be bound by petty morality, 
+Received: awhere the scientist would not be bound by petty morality, 
+
+Error Line #8 -10 points
+Input:    And with the sweat of your brow, Rapture can become your city as well.
+Expected: And with the sweat of your brow, Rapture can become your city as well.
+Received: aAnd with the sweat of your brow, Rapture can become your city as well.
+
+Your score: 50/90
+Your percent: 55.56%
+
+========== Running test: test_gman ==========
+Error Line #2 -10 points
+Input:    When I plucked her from Black Mesa, I acted in the face of objections that she was a mere child and of no practical use to anyone. I have learned to ignore such naysayers when quelling them was out of the question.
+Expected: When I plucked her from Black Mesa, I acted in the face of objections that she was a mere child and of no practical use to anyone. I have learned to ignore such naysayers when quelling them was out of the question.
+Received: aWhen I plucked her from Black Mesa, I acted in the face of objections that she was a mere child and of no practical use to anyone. I have learned to ignore such naysayers when quelling them was out of the question.
+
+Error Line #4 -10 points
+Input:    That's why I must now extract from you some small repayment owed for your own survival.
+Expected: That's why I must now extract from you some small repayment owed for your own survival.
+Received: aThat's why I must now extract from you some small repayment owed for your own survival.
+
+Error Line #6 -10 points
+Input:    I wish I could do more than keep an eye on you, but I have agreed to abide by certain... restrictions.
+Expected: I wish I could do more than keep an eye on you, but I have agreed to abide by certain... restrictions.
+Received: aI wish I could do more than keep an eye on you, but I have agreed to abide by certain... restrictions.
+
+Error Line #8 -10 points
+Input:    Prepare for unforeseen consequences.
+Expected: Prepare for unforeseen consequences.
+Received: aPrepare for unforeseen consequences.
+
+Your score: 50/90
+Your percent: 55.56%
+
+========== Results of All Tests ==========
+Your score 120/220
+Your percent 54.55%

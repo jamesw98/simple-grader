@@ -1,0 +1,26 @@
+Tests to be run:
+0. test_basic
+   Points: 40
+   Input File: test.txt
+1. test_ryan
+   Points: 90
+   Input File: test_2.txt
+2. test_gman
+   Points: 90
+   Input File: test_3.txt
+
+========== Running test: test_basic ==========
+No errors! Congratulations!
+
+Your score: 40/40
+Your percent: 100.0%
+
+========== Running test: test_ryan ==========
+FATAL: Your program crashed! No points earned!
+Command '['./student_exe', 'test_2.txt']' died with <Signals.SIGSEGV: 11>.
+========== Running test: test_gman ==========
+FATAL: Your program crashed! No points earned!
+Command '['./student_exe', 'test_3.txt']' died with <Signals.SIGSEGV: 11>.
+========== Results of All Tests ==========
+Your score 40/220
+Your percent 18.18%
