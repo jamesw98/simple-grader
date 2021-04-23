@@ -223,6 +223,25 @@ The grader can also take `.tar` and `.zip` compressed files as submissions. The 
 }
 ```
 This would work for both `.tar` and `.zip` submissions.
+### Grading All Files in a Directory
+If you would like to grade all files in a directory you can run the grader with the `-d` flag. An example would be:  
+```
+./grader.py args_test.json -d dir_test/
+```  
+This will grade every file in the specified directory and write the results to a `.txt` file for each file the grader graded. For example, `dir_test` in this repo contains all the `args_test` C files mentioned, before. So it will create four output result files:  
+* `args_test.result.txt`
+* `args_test_no_compile.result.txt`
+* `args_test_segfault.result.txt`
+* `args_test_wrong.result.txt`    
+
+All of the output that would normally be printed to `stdout` is in these files. The following is what is seen in `stdout`:  
+```
+Grading: args_test_no_compile.c, outputting to: dir_test/args_test_no_compile.c.txt
+Grading: args_test_segfault.c, outputting to: dir_test/args_test_segfault.c.txt
+Grading: args_test_wrong.c, outputting to: dir_test/args_test_wrong.c.txt
+Grading: args_test.c, outputting to: dir_test/args_test.c.txt
+```  
+This could be useful if you have a directory of student submission where submissions are a username or PID.
 ## Supported Languages/Submission Formats
 ### Languages
 * Python
