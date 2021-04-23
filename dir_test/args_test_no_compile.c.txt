@@ -1,2 +1,0 @@
-FATAL: Your program didn't compile! No points earned!
-Command '['gcc', '-o', 'student_exe', 'args_test_no_compile.c']' returned non-zero exit status 1.
