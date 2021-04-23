@@ -223,6 +223,19 @@ The grader can also take `.tar` and `.zip` compressed files as submissions. The 
 }
 ```
 This would work for both `.tar` and `.zip` submissions.
+### Compiler Flags
+If you would like to compile with specific flags, such as compiling with `gcc -lm` to make use of the `math.h` library in C, you can simply include a `flags` field in the top level of the `json` input file, like so:
+```json
+{
+    "language": "c",
+    "stdout": true,
+    "flags": ["-lm"],
+    "tests": { 
+        ...
+    }
+}
+```  
+This is a snippet of `flags_test.json`, which is in the `examples` folder in this repo. This test was made to be run against `math.c`
 ### Grading All Files in a Directory
 If you would like to grade all files in a directory you can run the grader with the `-d` flag. An example would be:  
 ```
