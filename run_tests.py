@@ -11,10 +11,8 @@ import os
 def grade(grading_json_filename, prog_name, output_file_name=None):
 
     output_file = None
-    write_to_file = False
 
     if(output_file_name):
-        write_to_file = True
         output_file = open(output_file_name, "w")
 
     compiled = False
@@ -87,16 +85,6 @@ def grade(grading_json_filename, prog_name, output_file_name=None):
     output(f"\nYour score {total_score}/{total_points}", output_file)
     output("Your percent " + str(round(calc_percent(total_score, total_points), 2)) + "%", output_file)
 
-    # display over all results
-    # if (write_to_file):
-    #     output_file.write("\n" + "=" * 10 + " Results of All Tests " + "=" * 10)
-    #     output_file.write(f"\nYour score {total_score}/{total_points}\n")
-    #     output_file.write("Your percent " + str(round(calc_percent(total_score, total_points), 2)) + "%")
-    # else:
-    #     print("\n" + "=" * 10 + " Results of All Tests " + "=" * 10)
-    #     print(f"\nYour score {total_score}/{total_points}")
-    #     print("Your percent " + str(round(calc_percent(total_score, total_points), 2)) + "%")
-
 # compiles the student's programs
 def compile(prog_name, compiler, language, compressed, files, flags, output_file=None):
     try:
@@ -114,13 +102,6 @@ def compile(prog_name, compiler, language, compressed, files, flags, output_file
         return True
     except Exception as e:
         output(f"FATAL: Your program didn't compile! No points earned!\n{e}", output_file)
-
-        # write error to output file, if being used
-        # if (output_file):
-        #     output_file.write(f"FATAL: Your program didn't compile! No points earned!\n{e}")
-        # # else, write to stdout
-        # else:
-        #     print(f"FATAL: Your program didn't compile! No points earned!\n{e}")
         return False
 
 # removes compiled executables/.class files 
@@ -145,10 +126,6 @@ def check_extension(prog_name) -> bool:
 # runs tests
 def run_test(test, prog_name, compiled, language, compressed, output_file):
     output("\n" + "=" * 10 + f" Running test: {test.name} " + "=" * 10, output_file)
-    # if (output_file):
-    #     output_file.write("\n" + "=" * 10 + f" Running test: {test.name} " + "=" * 10)
-    # else:
-    #     print("\n" + "=" * 10 + f" Running test: {test.name} " + "=" * 10)
 
     points = test.points
     points_off = test.points_off_per_line
@@ -176,10 +153,6 @@ def run_test(test, prog_name, compiled, language, compressed, output_file):
     # student program crashed, or failed to compile
     except Exception as e:
         output(f"\nFATAL: Your program crashed! No points earned!\n{e}", output_file)
-        # if (output_file):
-        #     output_file.write(f"\nFATAL: Your program crashed! No points earned!\n{e}")
-        # else:
-        #     print(f"\nFATAL: Your program crashed! No points earned!\n{e}")
         return 0
 
     # determine if the program is writint to stdout or a file
@@ -213,23 +186,8 @@ def run_test(test, prog_name, compiled, language, compressed, output_file):
     elif (student_score == points):
         output("\nNo errors! Congratulations!\n", output_file)
 
-        # write to output file, if in use
-        # if (output_file):
-        #     output_file.write("\nNo errors! Congratulations!\n")
-        # # else write to stdout
-        # else:
-        #     print("\nNo errors! Congratulations!")
-
     output("\nYour score: " + str(student_score) + "/" + str(points), output_file)
     output("Your percent: " + str(round(calc_percent(student_score, points), 2)) + "%", output_file)
-
-    # # display score
-    # if (output_file):
-    #     output_file.write("\nYour score: " + str(student_score) + "/" + str(points) + "\n")
-    #     output_file.write("Your percent: " + str(round(calc_percent(student_score, points), 2)) + "%\n")
-    # else:
-    #     print("\nYour score: " + str(student_score) + "/" + str(points))
-    #     print("Your percent: " + str(round(calc_percent(student_score, points), 2)) + "%")
 
     return student_score
 
