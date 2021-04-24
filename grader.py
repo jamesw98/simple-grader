@@ -18,13 +18,13 @@ else:
         # loops through everything in a directory
         for _file in listdir(sys.argv[3]):
             if (isfile(_file) and ".txt" not in _file):
-                print(f"Grading: {_file}, outputting to: {sys.argv[3]}{_file}.txt")
+                print(f"Grading: {_file}, outputting to: {sys.argv[3]}{_file.split('.')[0]}.result.txt")
                 grade(sys.argv[1], _file, sys.argv[3] + _file.split(".")[0] + ".result.txt")
 
     # user wants to write to a file instead of stdout
     elif (len(sys.argv) == 4 and sys.argv[1] == "-f"):
-        print(f"Grading: {sys.argv[3]}, outputting to: {sys.argv[3]}.txt")
-        grade(sys.argv[2], sys.argv[3], sys.argv[3] + ".txt")
+        print(f"Grading: {sys.argv[3]}, outputting to: {sys.argv[3].split('.')[0]}.result.txt")
+        grade(sys.argv[2], sys.argv[3], sys.argv[3].split(".")[0] + "result.txt")
 
     # standard case, grade one file, output to stdout
     else:
