@@ -7,17 +7,19 @@ from read_json import get_flags
 import subprocess as sp
 import os
 
+VALID_SUBMISSION_TYPES = ["py", "hs", "c", "java", "rb", "tar", "zip"]
+
 # grades a student program
 def grade(grading_json_filename, prog_name, output_file_name=None):
 
     output_file = None
-
-    if(output_file_name):
-        output_file = open(output_file_name, "w")
-
     compiled = False
     compressed = False
     compiler = []
+
+    # sets output file if it is being used
+    if(output_file_name):
+        output_file = open(output_file_name, "w")
 
     # makes sure the grading data is valid
     if (load_grading_data(grading_json_filename) == None):      
@@ -30,17 +32,23 @@ def grade(grading_json_filename, prog_name, output_file_name=None):
     # gets the language this assignment is written in
     language = get_language()
 
+    # used for compiling compressed output
     compressed_output = []
     compressed_to_compile = []
 
+    # unzips a compressed submission
     if (".zip" in prog_name):
+        os.mkdir("temp")
         # actually unzip the files
-        sp.run(["unzip", "-u", prog_name], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE)
+        sp.run(["unzip", "-u", prog_name, "-d", "temp/"], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE)
         # get the files that were unzipped
         compressed_output = sp.run(["unzip", "-v", prog_name], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE).stdout.split("\n")
         compressed = True
+    
+    # untars a compressed submission
     elif (".tar" in prog_name):
-        out = sp.run(["tar", "-xvf", prog_name], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE)
+        os.mkdir("temp")
+        out = sp.run(["tar", "-xvf", prog_name, "-C", "temp/"], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE)
         compressed_to_compile = out.stdout.split("\n")[:-1] # this always includes one extra line, so strip that one off
         compressed = True
     
@@ -81,26 +89,43 @@ def grade(grading_json_filename, prog_name, output_file_name=None):
     if (compiled):
         remove_exe(prog_name, language, compressed)
 
+    if (compressed):
+        for f in os.listdir("temp"):
+            os.remove(f"temp/{f}")
+        os.removedirs("temp")
+
     output("\n" + "=" * 10 + " Results of All Tests " + "=" * 10, output_file)
     output(f"\nYour score {total_score}/{total_points}", output_file)
     output("Your percent " + str(round(calc_percent(total_score, total_points), 2)) + "%", output_file)
 
 # compiles the student's programs
 def compile(prog_name, compiler, language, compressed, files, flags, output_file=None):
+    # attempts to run the submission
     try:
+        # used for compression
+        orig_dir = os.getcwd()
+
+        # checks for compression
         if (not compressed):
             if (language == "java"):
                 sp.run(compiler + [prog_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
             elif (language == "c" or language == "haskell"):
                 sp.run(compiler + ["-o", "student_exe", prog_name] + flags, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
         else:
+            # move to the temp directory
+            os.chdir("temp")
             if (language == "java"):
                 sp.run(compiler + files, check=True, universal_newlines=True)
             elif (language == "c" or language == "haskell"):
                 sp.run(compiler + ["-o", "student_exe", "*.c"], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-            
+            # go back to the original directory
+            os.chdir(orig_dir)
+
         return True
+
+    # if the program crashed, write a message and award no points
     except Exception as e:
+        os.chdir(orig_dir)
         output(f"FATAL: Your program didn't compile! No points earned!\n{e}", output_file)
         return False
 
@@ -114,15 +139,6 @@ def remove_exe(prog_name, language, compressed):
     elif (language == "c" or language == "haskell"):
         os.remove("student_exe")
 
-# checks if program has valid extension
-def check_extension(prog_name) -> bool:
-    if (".py" not in prog_name and ".hs" not in prog_name and ".c" not in prog_name 
-        and ".java" not in prog_name and ".zip" not in prog_name and ".tar" not in prog_name):
-        print("Invalid program type, currently only Python and Haskell are supported")
-        return False
-
-    return True
-
 # runs tests
 def run_test(test, prog_name, compiled, language, compressed, output_file):
     output("\n" + "=" * 10 + f" Running test: {test.name} " + "=" * 10, output_file)
@@ -134,10 +150,24 @@ def run_test(test, prog_name, compiled, language, compressed, output_file):
     input_lines = open(test.input_file, "r").readlines()
 
     try:
+        # if compression was used, move into the temp dir
+        if (compressed):
+            orig_dir = os.getcwd()
+            os.chdir("temp")
+
         # runs python program
         if (language == "python"):
-            student_exe = sp.run(["python3", prog_name] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
-    
+            if (not compressed):
+                student_exe = sp.run(["python3", prog_name] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            else:
+                student_exe = sp.run(["python3", f"{test.main}"] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        # runs the ruby program
+        elif (language == "ruby"):
+            if (not compressed):
+                student_exe = sp.run(["ruby", prog_name] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            else:
+                student_exe = sp.run(["ruby", f"{test.main}"] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            
         # compiles and runs a compiled language (c, haskell)
         elif (compiled):
             # if the submission was compressed, run the main file
@@ -149,9 +179,16 @@ def run_test(test, prog_name, compiled, language, compressed, output_file):
             # if the language is c or haskell, run the compiled executable
             elif (language == "c" or language == "haskell"):
                 student_exe = sp.run(["./student_exe"] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+            
+        # if compression was used, move back to original dir
+        if (compressed):
+            os.chdir(orig_dir)
 
     # student program crashed, or failed to compile
     except Exception as e:
+        if (compressed):
+            os.chdir(orig_dir)
+
         output(f"\nFATAL: Your program crashed! No points earned!\n{e}", output_file)
         return 0
 
@@ -216,13 +253,19 @@ def print_error(num, expected, received, points_off, input_lines, output_file):
     output(f"Expected: {expected}", output_file)
     output(f"Received: {received}", output_file)
 
-# compares a student line to an expected line
-def check_line(student_line, expected_line):
-    return student_line.lower().replace("\n", "") == expected_line.lower().replace("\n", "")
-
 # determines what type of output to write and writes it
 def output(string, output_file):
     if (output_file):
-        output_file.write(string)
+        output_file.write(f"{string}\n")
     else:
         print(string)
+
+# checks if program has valid extension
+def check_extension(prog_name) -> bool:
+    if (prog_name.split(".")[1] not in VALID_SUBMISSION_TYPES):    
+        return False
+    return True
+
+# compares a student line to an expected line
+def check_line(student_line, expected_line):
+    return student_line.lower().replace("\n", "") == expected_line.lower().replace("\n", "")
