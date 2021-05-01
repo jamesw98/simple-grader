@@ -7,6 +7,7 @@ This tool lets graders grade a programs written by students in a variety of lang
 * C
 * Haskell
 * Java
+* Ruby
 ### Submission Formats
 * Single File (.py, .c, .hs, etc)
 * .tar
