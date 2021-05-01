@@ -3,6 +3,7 @@ from read_json import get_all_tests
 from read_json import print_test_info
 from read_json import get_language
 from read_json import get_flags
+from read_json import get_generator_info
 
 import subprocess as sp
 import os
@@ -20,8 +21,11 @@ PARAMS
 def grade(grading_json_filename, sub_name, output_file_name=None):
 
     output_file = None
+    reference_solution = None
+
     compiled = False
     compressed = False
+
     compiler = []
 
     # sets output file if it is being used
@@ -92,13 +96,23 @@ def grade(grading_json_filename, sub_name, output_file_name=None):
     if (compiled and not compile(sub_name, compiler, language, compressed, compressed_to_compile, get_flags(), output_file)):
         return
 
+    # get generator info, if there is any
+    gen_info = get_generator_info()
+    if (gen_info):
+        generator = gen_info[0]
+        reference_solution = gen_info[1]
+        generator_args = gen_info[2]
+
+        # generate an input file
+        sp.run([f"./{generator}"] + generator_args, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+
     # prints the test info
     total_points = print_test_info(output_file)
     total_score = 0
 
     # runs tests and displays results
     for test in get_all_tests():
-        total_score += run_test(test, sub_name, compiled, language, compressed, output_file)
+        total_score += run_test(test, sub_name, compiled, language, compressed, reference_solution ,output_file)
 
     # if the langauge is compiled, remove the executable
     if (compiled and not compressed):
@@ -179,7 +193,10 @@ PARAMS:
 RETURNS:
     the student's score on the test that was run
 """
-def run_test(test, sub_name, compiled, language, compressed, output_file=None):
+def run_test(test, sub_name, compiled, language, compressed, ref_sol, output_file=None):
+    if (ref_sol):
+        sp.run([f"./{ref_sol}"], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+
     output("\n" + "=" * 10 + f" Running test: {test.name} " + "=" * 10, output_file)
 
     points = test.points
@@ -266,6 +283,14 @@ def run_test(test, sub_name, compiled, language, compressed, output_file=None):
     output("Your percent: " + str(round(calc_percent(student_score, points), 2)) + "%", output_file)
 
     return student_score
+
+"""
+this is just a rewrite so I don't have multiple super long lines
+PARAMS:
+    args: the arguments to pass to subprocess
+"""
+def run_program(args):
+    sp.run(args, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
 
 """
 checks and calculates a student's score

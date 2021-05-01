@@ -6,6 +6,7 @@ ERROR_START = "Error: Test: '"
 all_tests = []
 language = []
 flags = []
+generator_info = []
 
 # gets all the test
 def get_all_tests():
@@ -60,6 +61,9 @@ def get_language():
 def get_flags():
     return flags
 
+def get_generator_info():
+    return generator_info
+
 # ensures the json is valid and adds the tests to the list of all tests
 # returns true if everything is valid, false is something is wrong
 def validate_json(data) -> bool:
@@ -100,6 +104,28 @@ def validate_json(data) -> bool:
             return False
         else:   
             main = data["main"]
+
+    # if a generator is being used to create random input for a submission, get the info about it and the reference solution
+    generator = reference_solution = generator_args = None
+    if ("generator_info" in data):
+        if ("generator" not in data["generator_info"]):
+            print(f"{ERROR_START} 'generator_info' found, but generator not found")
+            return False
+        
+        if ("generator_args" not in data["generator_info"]):
+            print(f"{ERROR_START} 'generator_info' found, but generator_args not found")
+            return False
+        
+        if ("reference_solution" not in data["generator_info"]):
+            print(f"{ERROR_START} 'generator_info' found, but reference_solution not found")
+            return False
+
+        generator = data["generator_info"]["generator"]
+        reference_solution = data["generator_info"]["reference_solution"]
+        generator_args = data["generator_info"]["generator_args"]
+        generator_info.append(generator)
+        generator_info.append(reference_solution)
+        generator_info.append(generator_args)
 
     # checks each test
     for test in data["tests"]:
@@ -155,13 +181,17 @@ def validate_json(data) -> bool:
             student_output = data["student_output"]
 
         # adds the test
-        all_tests.append(Test(test, points, input_filename, expected_output_filename, points_per_line, max_off, stdout, student_output, args, main))
+        all_tests.append(Test(test, points, input_filename, expected_output_filename, 
+                              points_per_line, max_off, stdout, student_output, args, 
+                              main, generator, reference_solution, generator_args))
     
     return True
 
 class Test:
     def __init__(self, name, points, input_file, expected_output_file,
-                 points_off_per_line, max_points_off, stdout, student_output, arguments, main):
+                 points_off_per_line, max_points_off, stdout, student_output, 
+                 arguments, main, generator, reference_solution, 
+                 generator_args):
         self.name = name # test name
         self.points = points # points for this test
         self.input_file = input_file # the name for the input file 
@@ -172,3 +202,7 @@ class Test:
         self.student_output = student_output # the student output file (if not writing to stdout)
         self.arguments = arguments # the arguments for the program (if any)
         self.main = main # the main program name (for java programs given in a compressed file)
+        self.generator = generator # a generator for this test
+        self.reference_solution = reference_solution
+        self.generator_args = generator_args
+        
