@@ -50,22 +50,22 @@ def grade(grading_json_filename, sub_name, output_file_name=None):
     # unzips a compressed submission
     if (".zip" in sub_name):
         # make a temporary directory
-        os.mkdir("temp")
+        os.mkdir("sg_temp")
 
         # actually unzip the files
-        sp.run(["unzip", "-u", sub_name, "-d", "temp/"], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE)
+        run_command(["unzip", "-u", sub_name, "-d", "sg_temp/"])
 
         # get the files that were unzipped
-        compressed_output = sp.run(["unzip", "-v", sub_name], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE).stdout.split("\n")
+        compressed_output = run_command(["unzip", "-v", sub_name]).stdout.split("\n")
         compressed = True
     
     # untars a compressed submission
     elif (".tar" in sub_name):
         # make a temporary directory
-        os.mkdir("temp")
+        os.mkdir("sg_temp")
 
         # untar the files
-        out = sp.run(["tar", "-xvf", sub_name, "-C", "temp/"], stdout=sp.PIPE, universal_newlines=True, stderr=sp.PIPE)
+        out = run_command(["tar", "-xvf", sub_name, "-C", "sg_temp/"])
 
         # get the files to compile
         compressed_to_compile = out.stdout.split("\n")[:-1] # this always includes one extra line, so strip that one off
@@ -104,7 +104,7 @@ def grade(grading_json_filename, sub_name, output_file_name=None):
         generator_args = gen_info[2]
 
         # generate an input file
-        sp.run([f"./{generator}"] + generator_args, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+        run_command([f"./{generator}"] + generator_args)
 
     # prints the test info
     total_points = print_test_info(output_file)
@@ -147,16 +147,16 @@ def compile(sub_name, compiler, language, compressed, files, flags, output_file=
         # checks for compression
         if (not compressed):
             if (language == "java"):
-                sp.run(compiler + [sub_name], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+                run_command(compiler + [sub_name])
             elif (language == "c" or language == "haskell"):
-                sp.run(compiler + ["-o", "student_exe", sub_name] + flags, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+                run_command(compiler + ["-o", "student_exe", sub_name] + flags)
         else:
             # move to the temp directory
-            os.chdir("temp")
+            os.chdir("sg_temp")
             if (language == "java"):
-                sp.run(compiler + files, check=True, universal_newlines=True)
+                run_command(compiler + files)
             elif (language == "c" or language == "haskell"):
-                sp.run(compiler + ["-o", "student_exe", "*.c"], check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+                run_command(compiler + ["-o", "student_exe", "*.c"])
             # go back to the original directory
             os.chdir(orig_dir)
 
@@ -209,32 +209,32 @@ def run_test(test, sub_name, compiled, language, compressed, ref_sol, output_fil
         # if compression was used, move into the temp dir
         if (compressed):
             orig_dir = os.getcwd()
-            os.chdir("temp")
+            os.chdir("sg_temp")
 
         # runs python program
         if (language == "python"):
             if (not compressed):
-                student_exe = sp.run(["python3", sub_name] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+                student_exe = run_command(["python3", sub_name] + test.arguments)
             else:
-                student_exe = sp.run(["python3", f"{test.main}"] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+                student_exe = run_command(["python3", f"{test.main}"] + test.arguments)
         # runs the ruby program
         elif (language == "ruby"):
             if (not compressed):
-                student_exe = sp.run(["ruby", sub_name] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+                student_exe = run_command(["ruby", sub_name] + test.arguments)
             else:
-                student_exe = sp.run(["ruby", f"{test.main}"] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+                student_exe = run_command(["ruby", f"{test.main}"] + test.arguments)
             
         # compiles and runs a compiled language (c, haskell)
         elif (compiled):
             # if the submission was compressed, run the main file
             if (compressed and language == "java"):
-                student_exe = sp.run(["java", test.main] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+                student_exe = run_command(["java", test.main] + test.arguments)
             # if the submission is only one java file, run the one file
             elif (language == "java"):
-                student_exe = sp.run(["java", sub_name.replace(".java", "")] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+                student_exe = run_command(["java", sub_name.replace(".java", "")] + test.arguments)
             # if the language is c or haskell, run the compiled executable
             elif (language == "c" or language == "haskell"):
-                student_exe = sp.run(["./student_exe"] + test.arguments, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+                student_exe = run_command(["./student_exe"] + test.arguments)
             
         # if compression was used, move back to original dir
         if (compressed):
@@ -288,9 +288,12 @@ def run_test(test, sub_name, compiled, language, compressed, ref_sol, output_fil
 this is just a rewrite so I don't have multiple super long lines
 PARAMS:
     args: the arguments to pass to subprocess
+
+RETURNS:
+    subprocess object
 """
-def run_program(args):
-    sp.run(args, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+def run_command(args):
+    return sp.run(args, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
 
 """
 checks and calculates a student's score
@@ -381,6 +384,6 @@ def check_line(student_line, expected_line):
 cleans up the temp directory and removes it
 """
 def clean_temp_dir():
-    for f in os.listdir("temp"):
-        os.remove(f"temp/{f}")
-    os.removedirs("temp")
+    for f in os.listdir("sg_temp"):
+        os.remove(f"sg_temp/{f}")
+    os.removedirs("sg_temp")
