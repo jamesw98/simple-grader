@@ -64,12 +64,20 @@ def grade(grading_json_filename, sub_name, output_file_name=None):
         # make a temporary directory
         os.mkdir("sg_temp")
 
-        # untar the files
+        # untar the files into a dir called "sg_temp"
         out = run_command(["tar", "-xvf", sub_name, "-C", "sg_temp/"])
 
         # get the files to compile
         compressed_to_compile = out.stdout.split("\n")[:-1] # this always includes one extra line, so strip that one off
         compressed = True
+
+    # get the java files to compile
+    # since globs don't work with subprocess for some reason, I can't just do 'sp.run(javac *.java')
+    # this doesn't need to be run for tar files, since the output from `tar -xvf` is just the files in the tar
+    if (compressed and ".zip" in sub_name and language == "java"):
+        for line in compressed_output:
+            if (".java" in line):
+                compressed_to_compile.append(line[58:]) # oops, magic number, strips the filenames out of `unzip -v`
     
     # haskell
     if (language == "haskell"):
@@ -84,14 +92,6 @@ def grade(grading_json_filename, sub_name, output_file_name=None):
         compiled = True
         compiler.append("javac")
 
-    # get the java files to compile
-    # since globs don't work with subprocess for some reason, I can't just do 'sp.run(javac *.java')
-    # this doesn't need to be run for tar files, since the output from `tar -xvf` is just the files in the tar
-    if (compressed and ".zip" in sub_name):
-        for line in compressed_output:
-            if (language == "java" and ".java" in line):
-                compressed_to_compile.append(line[58:]) # oops, magic number, strips the filenames out of `unzip -v`
-    
     # if the program needs to be compiled, compile it
     if (compiled and not compile(sub_name, compiler, language, compressed, compressed_to_compile, get_flags(), output_file)):
         return
@@ -99,12 +99,9 @@ def grade(grading_json_filename, sub_name, output_file_name=None):
     # get generator info, if there is any
     gen_info = get_generator_info()
     if (gen_info):
-        generator = gen_info[0]
-        reference_solution = gen_info[1]
-        generator_args = gen_info[2]
-
         # generate an input file
-        run_command([f"./{generator}"] + generator_args)
+        run_command([f"./{gen_info[0]}"] + gen_info[2])
+        reference_solution = gen_info[1]
 
     # prints the test info
     total_points = print_test_info(output_file)
@@ -112,7 +109,7 @@ def grade(grading_json_filename, sub_name, output_file_name=None):
 
     # runs tests and displays results
     for test in get_all_tests():
-        total_score += run_test(test, sub_name, compiled, language, compressed, reference_solution ,output_file)
+        total_score += run_test(test, sub_name, compiled, language, compressed, reference_solution, output_file)
 
     # if the langauge is compiled, remove the executable
     if (compiled and not compressed):
@@ -139,7 +136,7 @@ PARAMS:
     output_file: defaults to None, if it isn't None, any output from compilation will be written here (this will only happen if the program fails to compile)
 """
 def compile(sub_name, compiler, language, compressed, files, flags, output_file=None):
-    # attempts to run the submission
+    # attempts to compile the submission
     try:
         # used for compression, get the current directory
         orig_dir = os.getcwd()
@@ -169,18 +166,6 @@ def compile(sub_name, compiler, language, compressed, files, flags, output_file=
         return False
 
 """
-removes the compiled executable for a submission
-PARAMS:
-    sub_name: the name of the submission
-    language: the language of the submission
-"""
-def remove_exe(sub_name, language):
-    if (language == "java"):
-        os.remove(sub_name.replace(".java", "") + ".class")
-    elif (language == "c" or language == "haskell"):
-        os.remove("student_exe")
-
-"""
 runs the student submission on a certain test and compares the output from the student to the expected output
 PARAMS:
     test:        a test object containing all the info needed to run the test
@@ -203,7 +188,7 @@ def run_test(test, sub_name, compiled, language, compressed, ref_sol, output_fil
     points_off = test.points_off_per_line
     max_points = test.max_points_off
     test_expected = test.expected_output_file
-    input_lines = open(test.input_file, "r").readlines()
+    input_lines = open(f"../info/{test.input_file}", "r").readlines()
 
     try:
         # if compression was used, move into the temp dir
@@ -255,7 +240,7 @@ def run_test(test, sub_name, compiled, language, compressed, ref_sol, output_fil
         student_output = open(test.student_output, "r").readlines()
 
     # reads the expected output
-    expected_output = open(test_expected, "r").readlines()
+    expected_output = open(f"../info/{test_expected}", "r").readlines()
     student_score = points
 
     # goes through the expected output and compares the student's output
@@ -283,17 +268,6 @@ def run_test(test, sub_name, compiled, language, compressed, ref_sol, output_fil
     output("Your percent: " + str(round(calc_percent(student_score, points), 2)) + "%", output_file)
 
     return student_score
-
-"""
-this is just a rewrite so I don't have multiple super long lines
-PARAMS:
-    args: the arguments to pass to subprocess
-
-RETURNS:
-    subprocess object
-"""
-def run_command(args):
-    return sp.run(args, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
 
 """
 checks and calculates a student's score
@@ -367,6 +341,7 @@ RETURN:
     true if the submission is valid, false if not
 """
 def check_extension(sub_name) -> bool:
+    print(sub_name)
     if (sub_name.split(".")[1] not in VALID_SUBMISSION_TYPES):    
         return False
     return True
@@ -387,3 +362,26 @@ def clean_temp_dir():
     for f in os.listdir("sg_temp"):
         os.remove(f"sg_temp/{f}")
     os.removedirs("sg_temp")
+
+"""
+this is just a rewrite so I don't have multiple super long lines
+PARAMS:
+    args: the arguments to pass to subprocess
+
+RETURNS:
+    subprocess object
+"""
+def run_command(args):
+    return sp.run(args, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+
+"""
+removes the compiled executable for a submission
+PARAMS:
+    sub_name: the name of the submission
+    language: the language of the submission
+"""
+def remove_exe(sub_name, language):
+    if (language == "java"):
+        os.remove(sub_name.replace(".java", "") + ".class")
+    elif (language == "c" or language == "haskell"):
+        os.remove("student_exe")

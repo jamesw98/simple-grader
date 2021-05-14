@@ -8,6 +8,8 @@ language = []
 flags = []
 generator_info = []
 
+important_info = []
+
 # gets all the test
 def get_all_tests():
     return all_tests
@@ -63,6 +65,9 @@ def get_flags():
 
 def get_generator_info():
     return generator_info
+
+def get_important_info():
+    return important_info
 
 # ensures the json is valid and adds the tests to the list of all tests
 # returns true if everything is valid, false is something is wrong
@@ -126,6 +131,8 @@ def validate_json(data) -> bool:
         generator_info.append(generator)
         generator_info.append(reference_solution)
         generator_info.append(generator_args)
+        important_info.append(generator)
+        important_info.append(reference_solution)
 
     # checks each test
     for test in data["tests"]:
@@ -138,6 +145,8 @@ def validate_json(data) -> bool:
             return False
         
         input_filename = curr_test["input_filename"]
+        if (input_filename not in important_info):
+            important_info.append(input_filename)
         
         # makes sure there is an expected output file
         if ("expected_output_filename" not in curr_test):
@@ -145,6 +154,8 @@ def validate_json(data) -> bool:
             return False
 
         expected_output_filename = curr_test["expected_output_filename"]
+        if (expected_output_filename not in important_info):
+            important_info.append(expected_output_filename)
         
         # makes sure each test has a point value
         if ("points" not in curr_test):
