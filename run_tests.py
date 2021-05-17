@@ -8,7 +8,7 @@ from read_json import get_generator_info
 import subprocess as sp
 import os
 
-VALID_SUBMISSION_TYPES = ["py", "hs", "c", "java", "rb", "tar", "zip"]
+VALID_SUBMISSION_TYPES = ["py", "hs", "c", "java", "rb", "pas","tar", "zip"]
 
 """
 grades a student's submission
@@ -91,6 +91,10 @@ def grade(grading_json_filename, sub_name, output_file_name=None):
     elif (language == "java"):
         compiled = True
         compiler.append("javac")
+    # pascal
+    elif (language == "pascal"):
+        compiled = True
+        compiler.append("fpc")
 
     # if the program needs to be compiled, compile it
     if (compiled and not compile(sub_name, compiler, language, compressed, compressed_to_compile, get_flags(), output_file)):
@@ -100,8 +104,11 @@ def grade(grading_json_filename, sub_name, output_file_name=None):
     gen_info = get_generator_info()
     if (gen_info):
         # generate an input file
+        original_dir = os.getcwd()
+        os.chdir("../info/")
         run_command([f"./{gen_info[0]}"] + gen_info[2])
         reference_solution = gen_info[1]
+        os.chdir(original_dir)
 
     # prints the test info
     total_points = print_test_info(output_file)
@@ -109,7 +116,10 @@ def grade(grading_json_filename, sub_name, output_file_name=None):
 
     # runs tests and displays results
     for test in get_all_tests():
-        total_score += run_test(test, sub_name, compiled, language, compressed, reference_solution, output_file)
+        if (test.stdin):
+            total_score += run_test_stdin(test, sub_name, compiled, language, compressed, reference_solution, output_file)
+        else:
+            total_score += run_test(test, sub_name, compiled, language, compressed, reference_solution, output_file)
 
     # if the langauge is compiled, remove the executable
     if (compiled and not compressed):
@@ -147,6 +157,8 @@ def compile(sub_name, compiler, language, compressed, files, flags, output_file=
                 run_command(compiler + [sub_name])
             elif (language == "c" or language == "haskell"):
                 run_command(compiler + ["-o", "student_exe", sub_name] + flags)
+            elif (language == "pascal"):
+                run_command(compiler + [sub_name] + flags)
         else:
             # move to the temp directory
             os.chdir("sg_temp")
@@ -269,6 +281,48 @@ def run_test(test, sub_name, compiled, language, compressed, ref_sol, output_fil
 
     return student_score
 
+def run_test_stdin(test, sub_name, compiled, language, compressed, reference_solution, output_file):
+    output("\n" + "=" * 10 + f" Running test: {test.name} " + "=" * 10, output_file)
+
+    points = student_score = test.points
+    points_off = test.points_off_per_line
+    max_points = test.max_points_off
+
+    input_lines = open(f"../info/{test.input_file}", "r").readlines()
+
+    line_num = 1
+    for line in input_lines:
+        try:
+            # if compression was used, move into the temp dir
+            if (compressed):
+                orig_dir = os.getcwd()
+                os.chdir("sg_temp")
+
+            if (language == "pascal"):
+                ref_output = run_command_with_stdin([f"../info/{reference_solution.split('.')[0]}"], line).stdout
+                stu_output = run_command_with_stdin([f"./{sub_name.split('.')[0]}"], line).stdout
+
+                if (not check_line(stu_output, ref_output)):
+                    student_score = check_score(student_score, points_off, points, max_points)
+                    print_error(line_num, ref_output, stu_output, points_off, input_lines, output_file)
+
+                if (student_score < points - max_points):
+                    student_score = points - max_points
+                            
+            # if compression was used, move back to original dir
+            if (compressed):
+                os.chdir(orig_dir)
+
+        # student program crashed, or failed to compile
+        except Exception as e:
+            if (compressed):
+                os.chdir(orig_dir)
+
+            output(f"\nFATAL: Your program crashed! No points earned!\n{e}", output_file)
+            return 0
+
+    return student_score
+
 """
 checks and calculates a student's score
 PARAMS:
@@ -341,7 +395,6 @@ RETURN:
     true if the submission is valid, false if not
 """
 def check_extension(sub_name) -> bool:
-    print(sub_name)
     if (sub_name.split(".")[1] not in VALID_SUBMISSION_TYPES):    
         return False
     return True
@@ -373,6 +426,10 @@ RETURNS:
 """
 def run_command(args):
     return sp.run(args, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE)
+    # return sp.run(args, check=True, universal_newlines=True, stderr=sp.PIPE)
+
+def run_command_with_stdin(args, stdin):
+    return sp.run(args, check=True, universal_newlines=True, stdout=sp.PIPE, stderr=sp.PIPE, input=stdin, shell=True)
 
 """
 removes the compiled executable for a submission

@@ -45,8 +45,6 @@ else:
         if (not isdir(sys.argv[2])):
             print(f"ERROR: {sys.argv[2]} is not a directory, please try again.")
         else:
-            original_path = os.getcwd()
-
             os.chdir(sys.argv[2])
             for _file in listdir(os.getcwd()):
                 if (isfile(_file) and ".txt" not in _file):

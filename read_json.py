@@ -73,6 +73,7 @@ def get_important_info():
 # returns true if everything is valid, false is something is wrong
 def validate_json(data) -> bool:
     stdout = True
+    stdin = False
     main = ""
 
     language.append(data["language"])
@@ -101,6 +102,12 @@ def validate_json(data) -> bool:
         if (not data["stdout"] and "student_output" not in data):
             print("Error: 'student_output' missing while 'stdout' is false is not valid")
             return False
+
+    if ("stdin" not in data):
+        print("Warning: Missing 'stdin', defaulting to 'false'")
+    else: 
+        if (data["stdin"]):
+            stdin = True
     
     # checks if the submission is compressed (zip/tar)
     if ("compressed" in data):
@@ -112,6 +119,7 @@ def validate_json(data) -> bool:
 
     # if a generator is being used to create random input for a submission, get the info about it and the reference solution
     generator = reference_solution = generator_args = None
+    gen_stdout = False
     if ("generator_info" in data):
         if ("generator" not in data["generator_info"]):
             print(f"{ERROR_START} 'generator_info' found, but generator not found")
@@ -124,6 +132,9 @@ def validate_json(data) -> bool:
         if ("reference_solution" not in data["generator_info"]):
             print(f"{ERROR_START} 'generator_info' found, but reference_solution not found")
             return False
+
+        if ("stdout" in data["generator_info"]):
+            gen_stdout = data["generator_info"]["stdout"]
 
         generator = data["generator_info"]["generator"]
         reference_solution = data["generator_info"]["reference_solution"]
@@ -149,13 +160,15 @@ def validate_json(data) -> bool:
             important_info.append(input_filename)
         
         # makes sure there is an expected output file
-        if ("expected_output_filename" not in curr_test):
+        if (not stdout and "expected_output_filename" not in curr_test):
             print(f"{ERROR_START} {test}' does not have an expected output file ('expected_output_filename')")
             return False
 
-        expected_output_filename = curr_test["expected_output_filename"]
-        if (expected_output_filename not in important_info):
-            important_info.append(expected_output_filename)
+        expected_output_filename = None
+        if (not stdout):
+            expected_output_filename = curr_test["expected_output_filename"]
+            if (expected_output_filename not in important_info):
+                important_info.append(expected_output_filename)
         
         # makes sure each test has a point value
         if ("points" not in curr_test):
@@ -194,7 +207,8 @@ def validate_json(data) -> bool:
         # adds the test
         all_tests.append(Test(test, points, input_filename, expected_output_filename, 
                               points_per_line, max_off, stdout, student_output, args, 
-                              main, generator, reference_solution, generator_args))
+                              main, generator, reference_solution, generator_args, 
+                              gen_stdout, stdin))
     
     return True
 
@@ -202,7 +216,7 @@ class Test:
     def __init__(self, name, points, input_file, expected_output_file,
                  points_off_per_line, max_points_off, stdout, student_output, 
                  arguments, main, generator, reference_solution, 
-                 generator_args):
+                 generator_args, generator_stdout, stdin):
         self.name = name # test name
         self.points = points # points for this test
         self.input_file = input_file # the name for the input file 
@@ -216,4 +230,6 @@ class Test:
         self.generator = generator # a generator for this test
         self.reference_solution = reference_solution
         self.generator_args = generator_args
+        self.generator_stdout = generator_stdout
+        self.stdin = stdin
         
